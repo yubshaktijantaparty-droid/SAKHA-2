@@ -140,6 +140,7 @@ export default function ChatView() {
 
 Location: `frontend/src/components/Message.tsx`
 
+{% raw %}
 ```typescript
 import React, { useState } from 'react'
 import { Copy, Edit, Trash2, ThumbsUp, ThumbsDown } from 'lucide-react'
@@ -214,6 +215,8 @@ export default function Message({ message }: MessageProps) {
             </ReactMarkdown>
           </div>
         )}
+```
+{% endraw %}
 
         {/* Actions */}
         {isAssistant && (
@@ -257,6 +260,7 @@ export default function Message({ message }: MessageProps) {
   )
 }
 ```
+{% endraw %}
 
 ## 3. ChatInput Component (Enhanced)
 
