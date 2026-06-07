@@ -34,16 +34,30 @@ export default function App() {
   }, [theme])
 
   useEffect(() => {
+    // Check for demo user in localStorage
+    const checkDemoUser = () => {
+      const demoUser = localStorage.getItem('demo_user')
+      if (demoUser) {
+        setSession(JSON.parse(demoUser) as any)
+      } else {
+        setSession(null)
+      }
+    }
+
     // Only check auth if Supabase is available
     if (!hasSupabase || !supabase?.auth) {
       // In demo mode, load demo user from localStorage
-      const demoUser = localStorage.getItem('demo_user')
-      if (demoUser) {
-        // Create a mock session for demo mode
-        setSession(JSON.parse(demoUser) as any)
-      }
+      checkDemoUser()
       setIsLoading(false)
-      return
+      
+      // Monitor localStorage changes for demo mode
+      const handleStorageChange = (e: StorageEvent) => {
+        if (e.key === 'demo_user') {
+          checkDemoUser()
+        }
+      }
+      window.addEventListener('storage', handleStorageChange)
+      return () => window.removeEventListener('storage', handleStorageChange)
     }
 
     // Real Supabase auth check

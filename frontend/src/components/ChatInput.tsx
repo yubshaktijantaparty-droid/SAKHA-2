@@ -10,16 +10,28 @@ interface ChatInputProps {
 
 export default function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
   const [message, setMessage] = useState('')
-  const [models, setModels] = useState<any[]>([])
   const { selectedModel, setSelectedModel } = useAppStore()
+
+  const defaultModels = [
+    { id: 'gpt-4o', name: 'OpenAI GPT-4o' },
+    { id: 'gpt-4-turbo', name: 'OpenAI GPT-4 Turbo' },
+    { id: 'gpt-3.5-turbo', name: 'OpenAI GPT-3.5 Turbo' },
+    { id: 'claude-3', name: 'Claude 3' },
+    { id: 'gemini-pro', name: 'Google Gemini Pro' },
+  ]
+
+  const [models, setModels] = useState<any[]>(defaultModels)
 
   useEffect(() => {
     const fetchModels = async () => {
       try {
         const data = await chatAPI.getAvailableModels()
-        setModels(data.models || [])
+        if (data.models && data.models.length > 0) {
+          setModels(data.models)
+        }
       } catch (error) {
         console.error('Failed to load models:', error)
+        // Keep default models
       }
     }
 

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { supabase, hasSupabase } from '../lib/supabase'
 import { Mail, Lock, Loader, AlertCircle } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -8,6 +9,7 @@ interface LoginProps {
 }
 
 export function Login({ onLoginSuccess }: LoginProps) {
+  const navigate = useNavigate()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
@@ -37,9 +39,10 @@ export function Login({ onLoginSuccess }: LoginProps) {
           toast.success('Logged in successfully!')
         }
         
-        // Delay slightly to show the toast
+        // Navigate after showing toast
         setTimeout(() => {
           onLoginSuccess?.()
+          navigate('/app/chat', { replace: true })
         }, 300)
         return
       }
@@ -65,9 +68,10 @@ export function Login({ onLoginSuccess }: LoginProps) {
         toast.success('Logged in successfully!')
       }
       
-      // Delay slightly to show the toast
+      // Navigate after showing toast
       setTimeout(() => {
         onLoginSuccess?.()
+        navigate('/app/chat', { replace: true })
       }, 300)
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Authentication failed'
