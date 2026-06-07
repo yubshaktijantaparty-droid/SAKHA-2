@@ -124,6 +124,8 @@ async def chat(request: ChatRequest, user_id: str = Header(None)):
                 system_prompt=system_prompt,
                 temperature=request.temperature,
                 max_tokens=request.max_tokens,
+                response_length=response_length.value,
+                deep_thinking=request.deep_thinking or False,
             )
             # Mark model as successful
             model_selector.reset_model_status(model_id, success=True)
@@ -224,6 +226,8 @@ async def chat_stream(request: ChatRequest, user_id: str = Header(None)):
                     system_prompt=system_prompt,
                     temperature=request.temperature,
                     max_tokens=request.max_tokens,
+                    response_length=response_length.value,
+                    deep_thinking=request.deep_thinking or False,
                 ):
                     full_response += chunk
                     yield f"data: {json.dumps({'chunk': chunk})}\n\n"

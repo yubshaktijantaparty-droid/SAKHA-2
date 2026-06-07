@@ -4,6 +4,7 @@ import aiohttp
 import json
 from typing import Optional, AsyncGenerator, List, Dict, Any
 from sakha.config import settings
+from sakha.services.local_ai import local_ai_service
 import logging
 
 logger = logging.getLogger(__name__)
@@ -28,39 +29,55 @@ class AIService:
         temperature: float = 0.7,
         max_tokens: int = 2048,
         chat_history: Optional[List[Dict[str, str]]] = None,
+        response_length: str = "medium",
+        deep_thinking: bool = False,
     ) -> str:
         """Get response from AI model"""
         
         try:
-            logger.info(f"get_response called with model: {model}")
+            logger.info(f"get_response called with model: {model}, response_length: {response_length}, deep_thinking: {deep_thinking}")
+            
+            # Check if any API keys are available
+            has_any_key = self.openai_api_key or self.anthropic_api_key or self.gemini_api_key or self.deepseek_api_key or self.openrouter_api_key
+            
+            # Use local AI if no real API keys available
+            if not has_any_key:
+                logger.info(f"No API keys available, using local AI service")
+                # Convert response_length to expected format
+                length_map = {"short": "short", "medium": "medium", "long": "long", "variable": "medium"}
+                return await local_ai_service.get_response(
+                    message,
+                    response_length=length_map.get(response_length, "medium"),
+                    deep_thinking=deep_thinking
+                )
+            
             if "gpt" in model.lower():
-                # Check if API key is available
-                if not self.openai_api_key:
-                    logger.warning(f"No OpenAI API key available, returning demo response")
-                    return self._get_demo_response(message)
                 logger.info(f"OpenAI API key available, making request")
                 return await self._openai_request(message, model, system_prompt, temperature, max_tokens, chat_history)
             elif "claude" in model.lower():
-                if not self.anthropic_api_key:
-                    logger.warning(f"No Anthropic API key available, returning demo response")
-                    return self._get_demo_response(message)
                 return await self._anthropic_request(message, model, system_prompt, temperature, max_tokens, chat_history)
             elif "gemini" in model.lower():
-                if not self.gemini_api_key:
-                    logger.warning(f"No Gemini API key available, returning demo response")
-                    return self._get_demo_response(message)
                 return await self._gemini_request(message, model, system_prompt, temperature, max_tokens, chat_history)
             elif "deepseek" in model.lower():
-                if not self.deepseek_api_key:
-                    logger.warning(f"No DeepSeek API key available, returning demo response")
-                    return self._get_demo_response(message)
                 return await self._deepseek_request(message, model, system_prompt, temperature, max_tokens, chat_history)
             else:
-                raise ValueError(f"Unsupported model: {model}")
+                # Fallback to local AI
+                logger.warning(f"Unsupported model: {model}, using local AI")
+                length_map = {"short": "short", "medium": "medium", "long": "long", "variable": "medium"}
+                return await local_ai_service.get_response(
+                    message,
+                    response_length=length_map.get(response_length, "medium"),
+                    deep_thinking=deep_thinking
+                )
         except Exception as e:
             logger.error(f"Error getting response from {model}: {e}", exc_info=True)
-            # Return demo response on error
-            return self._get_demo_response(message)
+            # Fallback to local AI on error
+            length_map = {"short": "short", "medium": "medium", "long": "long", "variable": "medium"}
+            return await local_ai_service.get_response(
+                message,
+                response_length=length_map.get(response_length, "medium"),
+                deep_thinking=deep_thinking
+            )
 
     async def stream_response(
         self,
@@ -70,10 +87,27 @@ class AIService:
         temperature: float = 0.7,
         max_tokens: int = 2048,
         chat_history: Optional[List[Dict[str, str]]] = None,
+        response_length: str = "medium",
+        deep_thinking: bool = False,
     ) -> AsyncGenerator[str, None]:
         """Stream response from AI model"""
         
         try:
+            # Check if any API keys are available
+            has_any_key = self.openai_api_key or self.anthropic_api_key or self.gemini_api_key or self.deepseek_api_key or self.openrouter_api_key
+            
+            # Use local AI if no real API keys available
+            if not has_any_key:
+                logger.info(f"No API keys available, using local AI stream service")
+                length_map = {"short": "short", "medium": "medium", "long": "long", "variable": "medium"}
+                async for chunk in local_ai_service.stream_response(
+                    message,
+                    response_length=length_map.get(response_length, "medium"),
+                    deep_thinking=deep_thinking
+                ):
+                    yield chunk
+                return
+            
             if "gpt" in model.lower():
                 async for chunk in self._openai_stream(message, model, system_prompt, temperature, max_tokens, chat_history):
                     yield chunk
@@ -86,9 +120,26 @@ class AIService:
             elif "deepseek" in model.lower():
                 async for chunk in self._deepseek_stream(message, model, system_prompt, temperature, max_tokens, chat_history):
                     yield chunk
+            else:
+                # Fallback to local AI
+                logger.warning(f"Unsupported model: {model}, using local AI stream")
+                length_map = {"short": "short", "medium": "medium", "long": "long", "variable": "medium"}
+                async for chunk in local_ai_service.stream_response(
+                    message,
+                    response_length=length_map.get(response_length, "medium"),
+                    deep_thinking=deep_thinking
+                ):
+                    yield chunk
         except Exception as e:
             logger.error(f"Error streaming response from {model}: {e}")
-            yield f"Error: {str(e)}"
+            # Fallback to local AI stream on error
+            length_map = {"short": "short", "medium": "medium", "long": "long", "variable": "medium"}
+            async for chunk in local_ai_service.stream_response(
+                message,
+                response_length=length_map.get(response_length, "medium"),
+                deep_thinking=deep_thinking
+            ):
+                yield chunk
 
     # OpenAI Methods
     async def _openai_request(
