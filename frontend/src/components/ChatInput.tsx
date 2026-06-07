@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react'
-import { Send, Loader } from 'lucide-react'
+import { Send, Loader, Brain } from 'lucide-react'
 import { chatAPI } from '../services/api'
 import { useAppStore } from '../stores/app'
 
 interface ChatInputProps {
-  onSendMessage: (message: string, model: string) => Promise<void>
+  onSendMessage: (message: string, model: string, deepThinking?: boolean) => Promise<void>
   isLoading?: boolean
 }
 
 export default function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
   const [message, setMessage] = useState('')
+  const [deepThinking, setDeepThinking] = useState(false)
   const { selectedModel, setSelectedModel } = useAppStore()
 
   const defaultModels = [
@@ -39,8 +40,9 @@ export default function ChatInput({ onSendMessage, isLoading }: ChatInputProps) 
   const handleSend = async () => {
     if (!message.trim() || isLoading) return
 
-    await onSendMessage(message, selectedModel)
+    await onSendMessage(message, selectedModel, deepThinking)
     setMessage('')
+    setDeepThinking(false)  // Reset deep thinking after sending
   }
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -52,7 +54,7 @@ export default function ChatInput({ onSendMessage, isLoading }: ChatInputProps) 
 
   return (
     <div className="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-darker-bg p-4">
-      {/* Model Selector */}
+      {/* Model Selector & Deep Thinking */}
       <div className="mb-3 flex items-center gap-2">
         <label className="text-sm text-gray-600 dark:text-gray-400">Model:</label>
         <select
@@ -66,6 +68,21 @@ export default function ChatInput({ onSendMessage, isLoading }: ChatInputProps) 
             </option>
           ))}
         </select>
+        
+        {/* Deep Thinking Toggle */}
+        <button
+          onClick={() => setDeepThinking(!deepThinking)}
+          disabled={isLoading}
+          className={`px-3 py-1 text-sm rounded border transition-colors flex items-center gap-1 ${
+            deepThinking
+              ? 'bg-purple-600 text-white border-purple-600'
+              : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 border-gray-300 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-600'
+          } disabled:opacity-50`}
+          title="Enable deep thinking for more thorough analysis"
+        >
+          <Brain size={16} />
+          <span>Deep Thinking</span>
+        </button>
       </div>
 
       {/* Input Area */}

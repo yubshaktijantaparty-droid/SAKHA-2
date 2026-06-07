@@ -19,7 +19,7 @@ export default function ChatView() {
     }
   }, [currentChat, createChat])
 
-  const handleSendMessage = async (messageText: string, model: string) => {
+  const handleSendMessage = async (messageText: string, model: string, deepThinking?: boolean) => {
     if (!currentChat || !messageText.trim()) return
 
     setIsLoading(true)
@@ -33,7 +33,7 @@ export default function ChatView() {
     addMessage(currentChat.id, userMessage)
 
     try {
-      const response = await chatAPI.sendMessage(messageText, model)
+      const response = await chatAPI.sendMessage(messageText, model, deepThinking)
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',

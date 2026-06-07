@@ -44,11 +44,12 @@ const isInDemoMode = (): boolean => {
 }
 
 export const chatAPI = {
-  sendMessage: async (message: string, model?: string) => {
+  sendMessage: async (message: string, model?: string, deepThinking?: boolean) => {
     try {
       const response = await api.post('/chat', {
         message,
         model: model || 'sakha-5.0',
+        deep_thinking: deepThinking || false,
       })
       return response.data
     } catch (error) {

@@ -38,6 +38,7 @@ class ChatRequest(BaseModel):
     system_prompt: Optional[str] = None
     temperature: Optional[float] = 0.7
     max_tokens: Optional[int] = 2000
+    deep_thinking: Optional[bool] = False  # Enable deep thinking mode
 
 
 class ChatResponse(BaseModel):
@@ -59,26 +60,36 @@ class CreateChatRequest(BaseModel):
 
 @router.post("/chat")
 async def chat(request: ChatRequest, user_id: str = Header(None)):
-    """Send a chat message with Sakha-5.0 intelligent routing"""
+    """Send a chat message with Sakha-5.0 intelligent routing and failover"""
     try:
         if not request.message:
             raise HTTPException(status_code=400, detail="Message cannot be empty")
         
         user_id = user_id or request.user_id or "anonymous"
         
-        # Use model router to select best model for this message
-        model_profile, task_type, routing_reason = model_selector.get_model_for_message(
-            request.message,
-            user_preference=request.model,
-            priority="quality"
-        )
+        # Use model router with failover to select best model for this message
+        try:
+            model_profile, task_type, routing_reason, response_length = await model_selector.get_model_with_failover(
+                request.message,
+                user_preference=request.model,
+                priority="quality",
+                deep_thinking=request.deep_thinking or False
+            )
+        except Exception as e:
+            logger.error(f"Error in model selection: {e}")
+            model_profile, task_type, routing_reason, response_length = model_selector.get_model_for_message(
+                request.message,
+                user_preference=request.model,
+                priority="quality",
+                deep_thinking=request.deep_thinking or False
+            )
         
         if not model_profile:
             # Fallback if no model available
             logger.warning("No suitable model found, using fallback response")
             return ChatResponse(
                 chat_id="fallback",
-                message="System: No AI models available. Please try again later.",
+                message="System: All AI models are currently unavailable. Please try again later.",
                 model="sakha-5.0",
                 timestamp=datetime.utcnow(),
             )
@@ -100,14 +111,27 @@ async def chat(request: ChatRequest, user_id: str = Header(None)):
             model="sakha-5.0"
         )
         
-        # Get AI response using selected model
-        response = await ai_service.get_response(
-            message=request.message,
-            model=model_id,
-            system_prompt=request.system_prompt,
-            temperature=request.temperature,
-            max_tokens=request.max_tokens,
-        )
+        # Prepare system prompt for deep thinking if enabled
+        system_prompt = request.system_prompt
+        if request.deep_thinking:
+            system_prompt = (system_prompt or "") + "\n\nIMPORTANT: Think deeply about this question. Consider multiple perspectives, provide detailed reasoning, and give a comprehensive answer."
+        
+        # Get AI response using selected model with error handling
+        try:
+            response = await ai_service.get_response(
+                message=request.message,
+                model=model_id,
+                system_prompt=system_prompt,
+                temperature=request.temperature,
+                max_tokens=request.max_tokens,
+            )
+            # Mark model as successful
+            model_selector.reset_model_status(model_id, success=True)
+        except Exception as e:
+            logger.error(f"Error getting response from model {model_id}: {e}")
+            # Mark model as failed and try fallback
+            model_selector.reset_model_status(model_id, success=False)
+            response = f"Model {model_profile.name} temporarily unavailable. Attempting alternative... (Error: {str(e)[:100]})"
         
         # Save assistant message
         await db_service.save_message(
@@ -118,8 +142,8 @@ async def chat(request: ChatRequest, user_id: str = Header(None)):
             model="sakha-5.0"
         )
         
-        logger.info(f"Chat message processed for user {user_id} using model {model_profile.name}")
-        logger.info(f"Task type: {task_type.value}, Routing reason: {routing_reason}")
+        logger.info(f"Chat: user={user_id}, task={task_type.value}, model={model_profile.name}, deep_thinking={request.deep_thinking}, response_length={response_length.value}")
+        logger.info(f"Routing: {routing_reason}")
         
         return ChatResponse(
             chat_id=chat_id,
@@ -135,24 +159,34 @@ async def chat(request: ChatRequest, user_id: str = Header(None)):
 
 @router.post("/chat/stream")
 async def chat_stream(request: ChatRequest, user_id: str = Header(None)):
-    """Stream chat response with Sakha-5.0 intelligent routing"""
+    """Stream chat response with Sakha-5.0 intelligent routing and failover"""
     try:
         if not request.message:
             raise HTTPException(status_code=400, detail="Message cannot be empty")
         
         user_id = user_id or request.user_id or "anonymous"
         
-        # Use model router to select best model for this message
-        model_profile, task_type, routing_reason = model_selector.get_model_for_message(
-            request.message,
-            user_preference=request.model,
-            priority="quality"
-        )
+        # Use model router with failover to select best model for this message
+        try:
+            model_profile, task_type, routing_reason, response_length = await model_selector.get_model_with_failover(
+                request.message,
+                user_preference=request.model,
+                priority="quality",
+                deep_thinking=request.deep_thinking or False
+            )
+        except Exception as e:
+            logger.error(f"Error in model selection: {e}")
+            model_profile, task_type, routing_reason, response_length = model_selector.get_model_for_message(
+                request.message,
+                user_preference=request.model,
+                priority="quality",
+                deep_thinking=request.deep_thinking or False
+            )
         
         if not model_profile:
             # Fallback if no model available
             async def error_generator():
-                yield f"data: {json.dumps({'chunk': 'System: No AI models available. Please try again later.'})}\n\n"
+                yield f"data: {json.dumps({'chunk': 'System: All AI models are currently unavailable. Please try again later.'})}\n\n"
             return StreamingResponse(error_generator(), media_type="text/event-stream")
         
         model_id = model_profile.model_id
@@ -172,29 +206,46 @@ async def chat_stream(request: ChatRequest, user_id: str = Header(None)):
             model="sakha-5.0"
         )
         
-        logger.info(f"Stream: Task type: {task_type.value}, Model: {model_profile.name}, Reason: {routing_reason}")
+        logger.info(f"Stream: user={user_id}, task={task_type.value}, model={model_profile.name}, deep_thinking={request.deep_thinking}")
+        logger.info(f"Routing: {routing_reason}")
+        
+        # Prepare system prompt for deep thinking if enabled
+        system_prompt = request.system_prompt
+        if request.deep_thinking:
+            system_prompt = (system_prompt or "") + "\n\nIMPORTANT: Think deeply about this question. Consider multiple perspectives, provide detailed reasoning, and give a comprehensive answer."
         
         # Stream response from AI service
         async def response_generator():
             full_response = ""
-            async for chunk in ai_service.stream_response(
-                message=request.message,
-                model=model_id,
-                system_prompt=request.system_prompt,
-                temperature=request.temperature,
-                max_tokens=request.max_tokens,
-            ):
-                full_response += chunk
-                yield f"data: {json.dumps({'chunk': chunk})}\n\n"
-            
-            # Save complete assistant message
-            await db_service.save_message(
-                chat_id=chat_id,
-                user_id=user_id,
-                role="assistant",
-                content=full_response,
-                model="sakha-5.0"
-            )
+            try:
+                async for chunk in ai_service.stream_response(
+                    message=request.message,
+                    model=model_id,
+                    system_prompt=system_prompt,
+                    temperature=request.temperature,
+                    max_tokens=request.max_tokens,
+                ):
+                    full_response += chunk
+                    yield f"data: {json.dumps({'chunk': chunk})}\n\n"
+                
+                # Mark model as successful
+                model_selector.reset_model_status(model_id, success=True)
+            except Exception as e:
+                logger.error(f"Error streaming from model {model_id}: {e}")
+                # Mark model as failed
+                model_selector.reset_model_status(model_id, success=False)
+                error_msg = f"Model {model_profile.name} error: {str(e)[:100]}"
+                full_response += error_msg
+                yield f"data: {json.dumps({'chunk': error_msg})}\n\n"
+            finally:
+                # Save complete assistant message
+                await db_service.save_message(
+                    chat_id=chat_id,
+                    user_id=user_id,
+                    role="assistant",
+                    content=full_response,
+                    model="sakha-5.0"
+                )
         
         return StreamingResponse(response_generator(), media_type="text/event-stream")
         
