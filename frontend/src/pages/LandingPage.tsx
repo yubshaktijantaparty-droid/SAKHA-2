@@ -1,4 +1,5 @@
 import React from 'react'
+import { Link } from 'react-router-dom'
 import { ArrowRight, Zap, Sparkles, Shield, Rocket } from 'lucide-react'
 
 export default function LandingPage() {
@@ -35,13 +36,19 @@ export default function LandingPage() {
           All in one premium application.
         </p>
         <div className="flex gap-4 justify-center">
-          <button className="px-8 py-3 bg-primary text-white rounded-lg hover:bg-primary/90 flex items-center gap-2">
+          <Link
+            to="/login"
+            className="px-8 py-3 bg-primary text-white rounded-lg hover:bg-primary/90 flex items-center gap-2"
+          >
             Start Chatting
             <ArrowRight size={20} />
-          </button>
-          <button className="px-8 py-3 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+          </Link>
+          <a
+            href="#features"
+            className="px-8 py-3 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+          >
             Learn More
-          </button>
+          </a>
         </div>
       </section>
 

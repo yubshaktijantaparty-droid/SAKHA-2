@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Send, Loader, Plus } from 'lucide-react'
+import { Send, Loader } from 'lucide-react'
 import { chatAPI } from '../services/api'
 import { useAppStore } from '../stores/app'
 
@@ -71,26 +71,20 @@ export default function ChatInput({ onSendMessage, isLoading }: ChatInputProps) 
           className="flex-1 px-4 py-3 rounded-lg bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 focus:outline-none focus:border-primary disabled:opacity-50 resize-none"
         />
 
-        <div className="flex flex-col gap-2">
-          <button
-            onClick={handleSend}
-            disabled={isLoading || !message.trim()}
-            className="px-4 py-3 bg-primary text-white rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
-          >
-            {isLoading ? (
-              <>
-                <Loader size={18} className="animate-spin" />
-                <span className="text-sm">...</span>
-              </>
-            ) : (
-              <Send size={18} />
-            )}
-          </button>
-
-          <button className="px-4 py-3 bg-gray-200 dark:bg-gray-700 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors flex items-center gap-2 justify-center">
-            <Plus size={18} />
-          </button>
-        </div>
+        <button
+          onClick={handleSend}
+          disabled={isLoading || !message.trim()}
+          className="px-4 py-3 bg-primary text-white rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+        >
+          {isLoading ? (
+            <>
+              <Loader size={18} className="animate-spin" />
+              <span className="text-sm">Sending...</span>
+            </>
+          ) : (
+            <Send size={18} />
+          )}
+        </button>
       </div>
 
       {/* Character Count */}

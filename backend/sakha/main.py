@@ -65,15 +65,34 @@ async def root():
 @app.on_event("startup")
 async def startup_event():
     """Run on startup"""
+    from sakha.database.mongodb import mongodb
+    
     logger.info(f"Starting {settings.APP_NAME}")
     logger.info(f"Environment: {settings.ENVIRONMENT}")
     logger.info(f"Database: {settings.DATABASE_TYPE}")
+    
+    # Connect to MongoDB
+    try:
+        await mongodb.connect_db()
+        logger.info("✓ Database connected successfully")
+    except Exception as e:
+        logger.error(f"✗ Failed to connect to database: {e}")
+        raise
 
 
 @app.on_event("shutdown")
 async def shutdown_event():
     """Run on shutdown"""
+    from sakha.database.mongodb import mongodb
+    
     logger.info(f"Shutting down {settings.APP_NAME}")
+    
+    # Close MongoDB connection
+    try:
+        await mongodb.close_db()
+        logger.info("✓ Database disconnected successfully")
+    except Exception as e:
+        logger.error(f"✗ Error closing database connection: {e}")
 
 
 if __name__ == "__main__":

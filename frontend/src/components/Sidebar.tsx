@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
-import { Plus, Trash2, Search } from 'lucide-react'
+import { Plus, Trash2, Search, Image, MessageSquare } from 'lucide-react'
+import { NavLink } from 'react-router-dom'
 import { useChatStore } from '../stores/chat'
 
 export default function Sidebar() {
@@ -12,8 +13,7 @@ export default function Sidebar() {
 
   return (
     <div className="w-64 bg-white dark:bg-dark-bg border-r border-gray-200 dark:border-gray-700 flex flex-col">
-      {/* New Chat Button */}
-      <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+      <div className="p-4 border-b border-gray-200 dark:border-gray-700 space-y-3">
         <button
           onClick={() => createChat()}
           className="w-full flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors font-medium"
@@ -21,9 +21,37 @@ export default function Sidebar() {
           <Plus size={18} />
           New Chat
         </button>
+
+        <nav className="grid gap-2">
+          <NavLink
+            to="/app/chat"
+            className={({ isActive }) =>
+              `flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                isActive
+                  ? 'bg-primary text-white'
+                  : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+              }`
+            }
+          >
+            <MessageSquare size={16} />
+            Chat
+          </NavLink>
+          <NavLink
+            to="/app/images"
+            className={({ isActive }) =>
+              `flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                isActive
+                  ? 'bg-primary text-white'
+                  : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+              }`
+            }
+          >
+            <Image size={16} />
+            Image Studio
+          </NavLink>
+        </nav>
       </div>
 
-      {/* Search */}
       <div className="p-3 border-b border-gray-200 dark:border-gray-700">
         <div className="relative">
           <Search size={16} className="absolute left-3 top-3 text-gray-400" />
@@ -37,7 +65,6 @@ export default function Sidebar() {
         </div>
       </div>
 
-      {/* Chat List */}
       <div className="flex-1 overflow-y-auto">
         {filteredChats.length === 0 ? (
           <div className="p-4 text-center text-gray-500 text-sm">
@@ -80,7 +107,6 @@ export default function Sidebar() {
         )}
       </div>
 
-      {/* Footer */}
       <div className="p-4 border-t border-gray-200 dark:border-gray-700 text-center text-xs text-gray-500">
         <p>SAKHA AI v1.0</p>
       </div>

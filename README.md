@@ -1,59 +1,65 @@
-# SAKHA AI - Premium ChatGPT-Like Website
+# SAKHA AI - ChatGPT-Like AI Assistant
 
-**Your Personal AI Assistant for Chat, Images, Files & Productivity**
+**Premium AI Assistant for Chat, Image Generation, and File Analysis**
 
-A fully-functional ChatGPT-like web application with support for multiple AI models, image generation, file analysis, and advanced tools.
+A production-ready web application combining the power of multiple AI models with a sleek, modern UI. Powered by OpenAI, Google Gemini, or DeepSeek.
 
 ## 🚀 Features
 
-### Core Functionality
-- **AI Chat** - Seamless conversation with OpenAI, DeepSeek, Google Gemini
-- **Streaming Responses** - Real-time response streaming for faster feedback
-- **Image Generation** - Generate beautiful images with multiple styles
-- **File Analysis** - Upload and analyze PDFs, documents, and images
-- **Chat History** - Save and manage all conversations
-- **Dark/Light Theme** - Modern UI with theme toggle
-- **PWA Support** - Install as mobile app
-- **Responsive Design** - Works on desktop, tablet, and mobile
+### ✨ Core Capabilities
+- **AI Chat** - Seamless conversation with GPT-4, Claude, Gemini, or DeepSeek
+- **Streaming Responses** - Real-time response streaming for instant feedback
+- **Image Generation** - Create stunning images from text prompts (Stability AI, Hugging Face, or Replicate)
+- **Chat History** - Persistent storage of all conversations
+- **User Authentication** - Secure login via Supabase
+- **Dark/Light Theme** - Beautiful UI with theme toggle
+- **Responsive Design** - Works perfectly on desktop, tablet, and mobile
+
+### 🎯 Perfect For
+- Personal AI assistant
+- Content creation
+- Learning and research
+- Image generation
+- Code review and explanation
 
 ## 🏗️ Tech Stack
 
 | Component | Technology |
 |-----------|-----------|
-| Frontend | React 18 + TypeScript + TailwindCSS |
-| Backend | FastAPI + Python 3.10+ |
-| State Management | Zustand |
-| Build Tool | Vite |
-| Database | MongoDB |
-| Deployment | Railway or Docker |
+| **Frontend** | React 18 + TypeScript + TailwindCSS + Vite |
+| **Backend** | FastAPI + Python 3.10+ |
+| **Database** | MongoDB |
+| **Auth** | Supabase (PostgreSQL + Auth) |
+| **State** | Zustand |
+| **Deployment** | GitHub Pages (Frontend) + Render/Railway (Backend) |
 
-## 📋 Quick Start
+## 📋 Quick Start (5 minutes)
 
 ### Prerequisites
-- Node.js 18+
+- Node.js 18+ & npm
 - Python 3.10+
-- API keys (OpenAI, DeepSeek, or Gemini)
+- Git
+- API keys (OpenAI, Gemini, or DeepSeek)
 
-### 1. Setup (2 minutes)
+### 1. Clone & Setup
 
-**Windows:**
 ```bash
+# Clone repository
+git clone https://github.com/yourusername/sakha-ai.git
+cd sakha-ai
+
+# Windows
 setup.bat
-```
 
-**Linux/Mac:**
-```bash
+# Linux/Mac
 bash setup.sh
 ```
 
 ### 2. Configure Environment
 
-Copy `.env.example` to `.env` and add your API keys:
-```env
-OPENAI_API_KEY=sk-...
-DEEPSEEK_API_KEY=sk-...
-GEMINI_API_KEY=...
-MONGODB_URI=mongodb://...
+```bash
+cp .env.example .env
+# Edit .env with your API keys
 ```
 
 ### 3. Start Development
@@ -70,237 +76,162 @@ cd frontend
 npm run dev
 ```
 
-### 4. Access
+### 4. Open Browser
 
 - **App**: http://localhost:5173
 - **API Docs**: http://localhost:8000/api/docs
-- **Health Check**: http://localhost:8000/api/health
 
-## 📁 Project Structure
+## 📦 Deployment
 
-```
-├── backend/                    # FastAPI backend
-│   ├── sakha/
-│   │   ├── main.py            # FastAPI app
-│   │   ├── config.py          # Settings
-│   │   ├── routes/            # API endpoints
-│   │   │   ├── chat.py
-│   │   │   ├── images.py
-│   │   │   ├── files.py
-│   │   │   └── admin.py
-│   │   ├── services/          # Business logic
-│   │   └── utils/
-│   ├── requirements.txt
-│   └── run.py
-├── frontend/                   # React frontend
-│   ├── src/
-│   │   ├── components/        # React components
-│   │   ├── pages/             # Page components
-│   │   ├── services/          # API calls
-│   │   ├── stores/            # State management
-│   │   ├── App.tsx
-│   │   └── main.tsx
-│   ├── public/
-│   ├── package.json
-│   └── vite.config.ts
-├── docker-compose.yml
-├── Dockerfile
-└── railway.toml
+### Option 1: GitHub Pages + Render (Recommended)
+
+**Frontend → GitHub Pages (Free)**
+```bash
+cd frontend
+npm run build
+# Automatic deployment via GitHub Actions
 ```
 
-## 🔌 API Endpoints
+**Backend → Render (Free tier)**
+1. Connect repo to Render
+2. Set environment variables
+3. Deploy
 
-### Chat
-- `POST /api/chat` - Send message
-- `POST /api/chat/stream` - Stream response
-- `GET /api/chat/models` - Get available models
-- `GET /api/chat/history/{id}` - Get conversation history
+See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed instructions.
 
-### Images
-- `POST /api/images/generate` - Generate image
-- `GET /api/images/styles` - Get available styles
+### Option 2: Railway (All-in-one)
 
-### Files
-- `POST /api/files/upload` - Upload file
-- `POST /api/files/{id}/analyze` - Analyze file
+```bash
+# Install Railway CLI
+npm i -g @railway/cli
 
-### Admin
-- `GET /api/admin/stats` - System statistics
-- `GET /api/admin/performance` - Performance metrics
+# Login and deploy
+railway login
+railway up
+```
 
-## 🐳 Docker Deployment
+### Option 3: Docker (Self-hosted)
 
 ```bash
 docker-compose up -d
 ```
 
-Access at:
-- Frontend: http://localhost:5173
-- Backend: http://localhost:8000
-
-## 🚀 Production Deployment
-
-### GitHub Pages + Render (Free & Recommended)
-
-Deploy for free using:
-- **Frontend**: GitHub Pages (free static hosting)
-- **Backend**: Render (free tier available)
-- **Database**: MongoDB Atlas (free tier available)
-
-**Quick Start:**
-1. Push code to GitHub
-2. Configure GitHub Actions secrets
-3. Setup Render backend service
-4. Enable GitHub Pages
-
-Your app will be live at:
-```
-https://YOUR_USERNAME.github.io/sakha-ai
-```
-
-📖 **Full Guide**: See [GITHUB_PAGES_DEPLOYMENT.md](./GITHUB_PAGES_DEPLOYMENT.md)
-
-### Railway (Alternative)
-
-1. Push to GitHub
-2. Connect Railway to repository
-3. Set environment variables
-4. Auto-deploy on each push
-
-See [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md) for detailed instructions.
-
-## 📚 Documentation
-
-| Document | Purpose |
-|----------|---------|
-| [QUICK_REFERENCE.md](./QUICK_REFERENCE.md) | Quick start guide |
-| [SETUP_GUIDE.md](./SETUP_GUIDE.md) | Development setup |
-| [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md) | Production deployment |
-| [ARCHITECTURE.md](./ARCHITECTURE.md) | System design |
-| [DELIVERY_SUMMARY.md](./DELIVERY_SUMMARY.md) | Project overview |
-
-## 🔑 Environment Variables
-
-Create `.env` file:
-
-```env
-# AI Services (Required - choose at least one)
-OPENAI_API_KEY=sk-...
-DEEPSEEK_API_KEY=sk-...
-GEMINI_API_KEY=...
-DEFAULT_AI_PROVIDER=openai
-
-# Database
-MONGODB_URI=mongodb://localhost:27017
-MONGODB_DB_NAME=sakha_db
-
-# Server
-SERVER_HOST=0.0.0.0
-SERVER_PORT=8000
-ENVIRONMENT=development
-DEBUG_MODE=True
-```
-
 ## 🔐 Security
 
-- Environment variables for all secrets
-- API key protection
-- CORS enabled
-- Rate limiting framework
-- Input validation
-- Error handling
+⚠️ **IMPORTANT**: Never commit `.env` files with real credentials!
 
-## 📊 Performance
+- API keys are stored in GitHub Secrets (for CI/CD)
+- User credentials in Supabase
+- Database connections via environment variables
+- CORS properly configured
+- Rate limiting enabled
 
-- Lighthouse Score: 95+
-- Response Time: < 200ms
-- Uptime: 99.9%
-- Mobile Optimized
+👉 See [SECURITY_NOTICE.md](SECURITY_NOTICE.md) for critical security information.
 
-## 🛠️ Development
+## 📁 Project Structure
 
-### Running Tests
-
-**Backend:**
-```bash
-cd backend
-pytest
+```
+├── frontend/                 # React app
+│   ├── src/
+│   │   ├── components/      # Reusable React components
+│   │   ├── pages/           # Page components
+│   │   ├── services/        # API client
+│   │   ├── stores/          # Zustand state management
+│   │   └── types/           # TypeScript types
+│   ├── package.json
+│   └── vite.config.ts
+│
+├── backend/                  # FastAPI server
+│   ├── sakha/
+│   │   ├── routes/          # API endpoints
+│   │   ├── services/        # Business logic
+│   │   ├── database/        # MongoDB connection
+│   │   ├── models/          # Data models
+│   │   └── main.py          # FastAPI app
+│   ├── requirements.txt
+│   └── run.py
+│
+└── docs/                     # Documentation
 ```
 
-**Frontend:**
+## 🛠️ Available Commands
+
+### Frontend
 ```bash
-cd frontend
-npm run test
+npm run dev          # Start dev server
+npm run build        # Build for production
+npm run preview      # Preview production build
+npm run lint         # Lint code
 ```
 
-### Building for Production
-
-**Backend:**
+### Backend
 ```bash
-cd backend
-pip install gunicorn
-gunicorn sakha.main:app --workers 4
+python run.py        # Start server
+python -m pytest     # Run tests
 ```
 
-**Frontend:**
+## 🤖 Supported AI Models
+
+### Chat
+- **OpenAI**: GPT-4o, GPT-4-turbo, GPT-3.5-turbo
+- **Google**: Gemini 2.5 Pro, Gemini 2.5 Flash
+- **DeepSeek**: DeepSeek-Chat, DeepSeek-Reasoner
+- **Anthropic**: Claude Opus, Claude Sonnet
+
+### Image Generation
+- **Stability AI**: SDXL, SD3 (Commercial, highest quality)
+- **Hugging Face**: Stable Diffusion v2, SDXL (Free)
+- **Replicate**: SDXL and more (Free tier available)
+
+## 📝 API Documentation
+
+Full API documentation available at `/api/docs` when backend is running.
+
+### Key Endpoints
+- `POST /api/chat` - Send chat message
+- `POST /api/chat/stream` - Stream response
+- `GET /api/chat/{chat_id}/history` - Get chat history
+- `POST /api/images/generate` - Generate image
+- `GET /api/images/history/{user_id}` - Image history
+- `GET /api/health` - Health check
+
+## 🧪 Testing
+
 ```bash
-cd frontend
-npm run build
-# Output in dist/
+# Backend tests
+cd backend && python -m pytest
+
+# Frontend tests
+cd frontend && npm run test
 ```
 
-## 🆘 Troubleshooting
+## 🤝 Contributing
 
-### Backend won't start
-```bash
-# Check Python version
-python --version  # Should be 3.10+
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Check .env file
-cat .env
-```
-
-### Frontend issues
-```bash
-# Clear cache
-rm -rf node_modules package-lock.json
-npm install
-
-# Check Node version
-node --version  # Should be 18+
-```
-
-### MongoDB connection error
-```bash
-# Verify connection string in .env
-# Test: mongodb://localhost:27017
-# Or Atlas: mongodb+srv://user:pass@cluster...
-```
-
-## 📖 Documentation Resources
-
-- [FastAPI](https://fastapi.tiangolo.com)
-- [React](https://react.dev)
-- [TailwindCSS](https://tailwindcss.com)
-- [MongoDB](https://docs.mongodb.com)
-- [Vite](https://vitejs.dev)
+Contributions welcome! Please:
+1. Fork the repository
+2. Create a feature branch
+3. Submit a pull request
 
 ## 📄 License
 
-MIT License - Free to use and modify
+MIT License - see LICENSE file
 
-## 🎯 Next Steps
+## 🆘 Support
 
-1. Run setup script
-2. Add API keys to `.env`
-3. Start backend: `python run.py`
-4. Start frontend: `npm run dev`
-5. Visit http://localhost:5173
+- **Issues**: GitHub Issues
+- **Discussions**: GitHub Discussions
+- **Email**: support@example.com
+
+## 🙏 Acknowledgments
+
+- [OpenAI](https://openai.com) - GPT models
+- [Google](https://google.com) - Gemini models
+- [Supabase](https://supabase.com) - Backend infrastructure
+- [FastAPI](https://fastapi.tiangolo.com) - Backend framework
+- [React](https://react.dev) - Frontend framework
 
 ---
 
-**SAKHA AI** - Premium AI Assistant Website
-Made with ❤️
+**Made with ❤️ by [Your Name]**
+
+🌟 If you found this project helpful, please consider giving it a star!
