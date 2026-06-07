@@ -53,7 +53,7 @@ class MongoDB:
         await cls.db.chats.create_index([("user_id", ASCENDING)])
         await cls.db.chats.create_index([("created_at", DESCENDING)])
         await cls.db.chats.create_index([("updated_at", DESCENDING)])
-        await cls.db.chats.create_index([(("title", TEXT), ("description", TEXT))])  # Full-text search
+        await cls.db.chats.create_index([("title", TEXT), ("description", TEXT)])  # Full-text search
         
         # Messages collection
         await cls.db.messages.create_index([("chat_id", ASCENDING)])

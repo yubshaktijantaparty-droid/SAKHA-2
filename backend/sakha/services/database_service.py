@@ -18,7 +18,7 @@ class DatabaseService:
         """Create a new chat session"""
         try:
             # Check if MongoDB is available
-            if not mongodb.db:
+            if mongodb.db is None:
                 logger.warning("MongoDB not available - chat not persisted")
                 return {"_id": "demo-" + str(datetime.utcnow().timestamp()), "user_id": user_id, "title": title, "model": model}
             
@@ -67,7 +67,7 @@ class DatabaseService:
             }
             
             # Check if MongoDB is available
-            if not mongodb.db:
+            if mongodb.db is None:
                 logger.warning("MongoDB not available - message not persisted")
                 message_doc["_id"] = "demo-" + str(datetime.utcnow().timestamp())
                 return message_doc

@@ -257,8 +257,8 @@ async def get_available_models():
     """Get list of available AI models"""
     return {
         "models": [
-            {"id": "openai", "name": "OpenAI GPT-4o", "provider": "OpenAI", "available": bool(settings.OPENAI_API_KEY)},
-            {"id": "deepseek", "name": "DeepSeek Chat", "provider": "DeepSeek", "available": bool(settings.DEEPSEEK_API_KEY)},
-            {"id": "gemini", "name": "Google Gemini", "provider": "Google", "available": bool(settings.GEMINI_API_KEY)},
+            {"id": "gpt-4o", "name": "OpenAI GPT-4o", "provider": "OpenAI", "available": bool(settings.OPENAI_API_KEY)},
+            {"id": "deepseek-chat", "name": "DeepSeek Chat", "provider": "DeepSeek", "available": bool(settings.DEEPSEEK_API_KEY)},
+            {"id": "gemini-2.5-flash", "name": "Google Gemini 2.5 Flash", "provider": "Google", "available": bool(settings.GEMINI_API_KEY)},
         ]
     }

@@ -14,7 +14,7 @@ interface AppStore {
 export const useAppStore = create<AppStore>((set) => ({
   theme: 'dark',
   sidebarOpen: true,
-  selectedModel: 'openai',
+  selectedModel: 'gpt-4o',
 
   setTheme: (theme) => set({ theme }),
   toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),

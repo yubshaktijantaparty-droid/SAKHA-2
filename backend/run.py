@@ -21,6 +21,6 @@ if __name__ == "__main__":
         "sakha.main:app",
         host=settings.SERVER_HOST,
         port=settings.SERVER_PORT,
-        reload=settings.DEBUG,
+        reload=False,
         log_level="info",
     )
