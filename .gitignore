@@ -108,6 +108,10 @@ pip-log.txt
 pip-delete-this-directory.txt
 pytype/
 
+# Allow frontend source libraries
+!frontend/src/lib/
+!frontend/src/lib/**
+
 # Virtual Environments
 venv/
 env/
