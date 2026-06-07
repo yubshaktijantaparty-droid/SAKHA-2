@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SAKHA AI - Premium AI Assistant</title>
+    <script>
+      // Redirect to index.html for GitHub Pages SPA routing
+      if (!window.location.pathname.endsWith('/') && !window.location.pathname.includes('.')) {
+        const path = window.location.pathname;
+        const search = window.location.search;
+        const hash = window.location.hash;
+        window.location.replace(path + '/' + search + hash);
+      }
+    </script>
+  </head>
+  <body>
+    <script>
+      // Fallback redirect to index.html for any 404s
+      const pathname = window.location.pathname;
+      const search = window.location.search;
+      const hash = window.location.hash;
+      
+      // Check if the pathname doesn't have a file extension
+      if (!pathname.match(/\.[a-z]+$/i)) {
+        // Redirect to index.html preserving the path for SPA
+        window.location.replace('/SAKHA-2/?' + encodeURIComponent(pathname + search + hash));
+      }
+    </script>
+  </body>
+</html>
