@@ -72,8 +72,10 @@ export default function App() {
     )
   }
 
+  const basename = import.meta.env.BASE_URL || '/'
+
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={basename}>
       <div className="min-h-screen bg-white dark:bg-darker-bg text-slate-900 dark:text-slate-100">
         <Toaster position="bottom-right" />
         <Routes>

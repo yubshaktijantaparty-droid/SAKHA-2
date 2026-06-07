@@ -3,7 +3,7 @@ import { defineConfig } from 'vite'
 
 // Get repo name from environment or use default
 const repoName = process.env.VITE_REPO_NAME || ''
-const basePath = process.env.NODE_ENV === 'production' ? `/${repoName}/` : '/'
+const basePath = process.env.NODE_ENV === 'production' && repoName ? `/${repoName}/` : '/'
 
 export default defineConfig({
   base: basePath,
