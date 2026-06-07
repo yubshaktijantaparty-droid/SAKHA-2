@@ -3,7 +3,8 @@ SAKHA Bot - Main Application
 """
 from fastapi import FastAPI, WebSocket, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, PlainTextResponse
+import os
 from contextlib import asynccontextmanager
 import asyncio
 from datetime import datetime
@@ -79,6 +80,39 @@ async def initialize_handlers():
     db_ops = await get_mongodb_ops()
     command_handler = CommandHandler(db_ops, ai_service)
     admin_handler = admin_command_handler
+
+
+# Webhook verification and receiver for WhatsApp callbacks
+VERIFY_TOKEN = os.getenv("WHATSAPP_VERIFY_TOKEN") or getattr(settings, "whatsapp_verify_token", None)
+
+
+@app.get("/webhook")
+async def verify_webhook(
+    hub_mode: str | None = None,
+    hub_verify_token: str | None = None,
+    hub_challenge: str | None = None,
+    hub_mode_q: str | None = None,
+    hub_verify_token_q: str | None = None,
+    hub_challenge_q: str | None = None,
+):
+    # Some providers send params twice; accept either name
+    token = hub_verify_token or hub_verify_token_q
+    challenge = hub_challenge or hub_challenge_q
+
+    if token and VERIFY_TOKEN and token == VERIFY_TOKEN:
+        return PlainTextResponse(challenge or "")
+    return PlainTextResponse("Forbidden", status_code=403)
+
+
+@app.post("/webhook")
+async def webhook(request: Request):
+    try:
+        data = await request.json()
+    except Exception:
+        data = {}
+    logger.info(f"Webhook received: {data}")
+    # Simple echo response for webhook reception
+    return {"status": "ok"}
 
 
 # Routes
