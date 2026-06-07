@@ -74,9 +74,9 @@ async def startup_event():
     # Connect to MongoDB
     try:
         await mongodb.connect_db()
-        logger.info("✓ Database connected successfully")
+        logger.info("[OK] Database connected successfully")
     except Exception as e:
-        logger.error(f"✗ Failed to connect to database: {e}")
+        logger.error(f"[ERROR] Failed to connect to database: {e}")
         raise
 
 
@@ -90,9 +90,9 @@ async def shutdown_event():
     # Close MongoDB connection
     try:
         await mongodb.close_db()
-        logger.info("✓ Database disconnected successfully")
+        logger.info("[OK] Database disconnected successfully")
     except Exception as e:
-        logger.error(f"✗ Error closing database connection: {e}")
+        logger.error(f"[ERROR] Error closing database connection: {e}")
 
 
 if __name__ == "__main__":

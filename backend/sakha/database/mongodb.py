@@ -23,13 +23,13 @@ class MongoDB:
             
             # Verify connection
             await cls.db.command('ping')
-            logger.info("✓ Connected to MongoDB")
+            logger.info("[OK] Connected to MongoDB")
             
             # Create indexes
             await cls._create_indexes()
             
         except Exception as e:
-            logger.warning(f"⚠ MongoDB connection failed: {e}")
+            logger.warning(f"[WARNING] MongoDB connection failed: {e}")
             logger.warning("Running in demo mode without persistence")
             cls.client = None
             cls.db = None
@@ -39,7 +39,7 @@ class MongoDB:
         """Close MongoDB connection"""
         if cls.client:
             cls.client.close()
-            logger.info("✓ Disconnected from MongoDB")
+            logger.info("[OK] Disconnected from MongoDB")
     
     @classmethod
     async def _create_indexes(cls):
@@ -71,7 +71,7 @@ class MongoDB:
         # Settings collection
         await cls.db.settings.create_index([("user_id", ASCENDING)], unique=True)
         
-        logger.info("✓ Database indexes created")
+        logger.info("[OK] Database indexes created")
 
 
 # Global instance

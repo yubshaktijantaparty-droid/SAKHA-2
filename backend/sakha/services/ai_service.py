@@ -12,39 +12,51 @@ logger = logging.getLogger(__name__)
 
 
 class AIService:
-    """AI Service with OpenRouter multi-model support and key rotation"""
+    """AI Service with OpenRouter multi-model support"""
 
     def __init__(self):
-        self.openrouter_api_keys = settings.OPENROUTER_API_KEYS  # List of available keys
-        self.openrouter_api_key = settings.OPENROUTER_API_KEY  # Current/default key
+        self.openrouter_api_keys = settings.OPENROUTER_API_KEYS
+        self.current_key_index = 0
         self.openai_api_key = settings.OPENAI_API_KEY
         self.gemini_api_key = settings.GEMINI_API_KEY
         self.deepseek_api_key = settings.DEEPSEEK_API_KEY
         self.timeout = settings.AI_TIMEOUT
-        self.current_key_index = 0  # Track which key we're currently using
         
         # Log available API keys on init
-        logger.info(f"✓ OpenRouter API Keys available: {len(self.openrouter_api_keys)} keys")
-        for i, key in enumerate(self.openrouter_api_keys):
-            key_preview = key[:20] + "..." if len(key) > 20 else key
-            logger.info(f"  Key {i+1}: {key_preview}")
-        logger.info(f"✓ OpenAI API Key available: {bool(self.openai_api_key)}")
-        logger.info(f"✓ Gemini API Key available: {bool(self.gemini_api_key)}")
-        logger.info(f"✓ DeepSeek API Key available: {bool(self.deepseek_api_key)}")
+        logger.info(f"[OK] OpenRouter API Keys available: {len(self.openrouter_api_keys)} keys loaded")
+        logger.info(f"[OK] OpenAI API Key available: {bool(self.openai_api_key)}")
+        logger.info(f"[OK] Gemini API Key available: {bool(self.gemini_api_key)}")
+        logger.info(f"[OK] DeepSeek API Key available: {bool(self.deepseek_api_key)}")
         
-        # Model mappings for OpenRouter (using real available models)
+        # Model mappings for OpenRouter (using FREE tier models with no credit requirements)
         self.model_mappings = {
-            "sakha-5.0": "openai/gpt-4-turbo",  # Best quality model
-            "nemotron-3-ultra": "openai/gpt-4-turbo",
-            "nemotron-3-super": "openai/gpt-4-turbo",
-            "nemotron-3-nano": "openai/gpt-3.5-turbo",
-            "qwen3-coder": "openai/gpt-4-turbo",  # Code generation
-            "gpt-4o": "openai/gpt-4-turbo",
-            "gpt-4": "openai/gpt-4-turbo",
-            "gpt-3.5": "openai/gpt-3.5-turbo",
-            "deepseek": "openai/gpt-3.5-turbo",
-            "claude": "anthropic/claude-opus-4",  # Claude model
+            "sakha-5.0": "openrouter/owl-alpha",  # FREE: Best quality reasoning model
+            "nemotron-3-ultra": "nvidia/nemotron-3-ultra-550b-a55b:free",  # FREE: NVIDIA ultra model
+            "nemotron-3-super": "nvidia/nemotron-3-super-120b-a12b:free",  # FREE: NVIDIA super model
+            "nemotron-3-nano": "qwen/qwen3-coder:free",  # FREE: Qwen coder model
+            "qwen3-coder": "qwen/qwen3-coder:free",  # FREE: Code generation with Qwen
+            "gpt-4o": "openrouter/owl-alpha",  # FREE: Using Owl Alpha instead
+            "gpt-4": "openrouter/owl-alpha",  # FREE: Using Owl Alpha instead
+            "gpt-3.5": "qwen/qwen3-coder:free",  # FREE: Qwen for lighter tasks
+            "deepseek": "deepseek/deepseek-chat:free",  # FREE: DeepSeek free tier
+            "claude": "anthropic/claude-3.5-haiku",  # FREE: Claude Haiku (cheapest)
+            "owl-alpha": "openrouter/owl-alpha",  # FREE: OWL Alpha model routing
         }
+
+    def get_current_api_key(self) -> str:
+        """Get current OpenRouter API key with rotation"""
+        if not self.openrouter_api_keys:
+            return ""
+        key = self.openrouter_api_keys[self.current_key_index]
+        return key
+    
+    def rotate_api_key(self):
+        """Rotate to next API key when current one fails"""
+        if self.openrouter_api_keys:
+            self.current_key_index = (self.current_key_index + 1) % len(self.openrouter_api_keys)
+            logger.info(f"Rotating API key to index {self.current_key_index}")
+            return self.get_current_api_key()
+        return ""
 
     async def get_response(
         self,
@@ -52,12 +64,12 @@ class AIService:
         model: str = "sakha-5.0",
         system_prompt: Optional[str] = None,
         temperature: float = 0.7,
-        max_tokens: int = 1000,  # Reduced from 2048 to stay within OpenRouter credit limits
+        max_tokens: int = 500,  # Optimized for free OpenRouter models
         chat_history: Optional[List[Dict[str, str]]] = None,
         response_length: str = "medium",
         deep_thinking: bool = False,
     ) -> str:
-        """Get response from AI model using OpenRouter with key rotation"""
+        """Get response from AI model using OpenRouter"""
         
         try:
             logger.info(f"get_response called with model: {model}, response_length: {response_length}, deep_thinking: {deep_thinking}")
@@ -99,7 +111,7 @@ class AIService:
         model: str = "sakha-5.0",
         system_prompt: Optional[str] = None,
         temperature: float = 0.7,
-        max_tokens: int = 1000,  # Reduced from 2048 to stay within OpenRouter credit limits
+        max_tokens: int = 500,  # Optimized for free OpenRouter models
         chat_history: Optional[List[Dict[str, str]]] = None,
         response_length: str = "medium",
         deep_thinking: bool = False,
@@ -109,9 +121,9 @@ class AIService:
         try:
             logger.info(f"stream_response called with model: {model}")
             
-            # Check if we have OpenRouter API key
-            if not self.openrouter_api_key:
-                logger.warning(f"No OpenRouter API key available, falling back to local AI stream")
+            # Check if we have OpenRouter API keys
+            if not self.openrouter_api_keys:
+                logger.warning(f"No OpenRouter API keys available, falling back to local AI stream")
                 length_map = {"short": "short", "medium": "medium", "long": "long", "variable": "medium"}
                 async for chunk in local_ai_service.stream_response(
                     message,
@@ -154,21 +166,32 @@ class AIService:
         chat_history: Optional[List[Dict[str, str]]] = None,
         deep_thinking: bool = False,
     ) -> str:
-        """Make request to OpenRouter API with key rotation on 402 errors"""
+        """Make request to OpenRouter API with automatic key rotation on 402 errors"""
+        keys_tried = set()
+        max_retries = len(self.openrouter_api_keys)
         
-        # Try each available key
-        for key_index, api_key in enumerate(self.openrouter_api_keys):
+        for attempt in range(max_retries):
             try:
+                current_key = self.get_current_api_key()
+                
+                # Avoid infinite loop if same key fails multiple times
+                if current_key in keys_tried:
+                    self.rotate_api_key()
+                    continue
+                
+                keys_tried.add(current_key)
+                logger.info(f"Attempt {attempt + 1}/{max_retries}: Using API key index {self.current_key_index}")
+                
                 async with aiohttp.ClientSession() as session:
                     headers = {
-                        "Authorization": f"Bearer {api_key}",
+                        "Authorization": f"Bearer {current_key}",
                         "Content-Type": "application/json",
                         "HTTP-Referer": "https://sakha.ai",
                         "X-Title": "SAKHA AI Premium",
                     }
 
-                    # Map model name to OpenRouter model ID
-                    openrouter_model = self.model_mappings.get(model.lower(), "openai/gpt-3.5-turbo")
+                    # Map model name to OpenRouter model ID (FREE tier models only)
+                    openrouter_model = self.model_mappings.get(model.lower(), "openrouter/owl-alpha")  # Fallback to free OWL Alpha
                     
                     # Build messages
                     messages = []
@@ -191,10 +214,10 @@ class AIService:
                         "model": openrouter_model,
                         "messages": messages,
                         "temperature": temperature,
-                        "max_tokens": min(max_tokens, 1000),  # Cap at 1000 to stay within OpenRouter credits
+                        "max_tokens": min(max_tokens, 500),  # Optimized for free OpenRouter models
                     }
 
-                    logger.info(f"Trying OpenRouter request with key {key_index + 1}/{len(self.openrouter_api_keys)} - model: {openrouter_model}")
+                    logger.info(f"Making OpenRouter request with model: {openrouter_model} using API key index {self.current_key_index}")
                     
                     async with session.post(
                         "https://openrouter.ai/api/v1/chat/completions",
@@ -203,40 +226,35 @@ class AIService:
                         timeout=aiohttp.ClientTimeout(total=self.timeout),
                     ) as response:
                         if response.status == 402:
-                            # Insufficient credits - try next key
                             error_text = await response.text()
-                            logger.warning(f"Key {key_index + 1} insufficient credits: {error_text}")
-                            if key_index < len(self.openrouter_api_keys) - 1:
-                                logger.info(f"Rotating to next API key...")
-                                continue
-                            else:
-                                # No more keys to try
-                                logger.error(f"All API keys exhausted (insufficient credits)")
-                                raise Exception(f"All OpenRouter API keys exhausted")
-                        
-                        if response.status != 200:
+                            logger.warning(f"API key index {self.current_key_index} out of credits: {error_text}")
+                            # Rotate to next key and retry
+                            self.rotate_api_key()
+                            continue
+                        elif response.status != 200:
                             error_text = await response.text()
                             logger.error(f"OpenRouter API error: {response.status} - {error_text}")
-                            raise Exception(f"OpenRouter error: {error_text}")
+                            self.rotate_api_key()
+                            continue
                         
                         result = await response.json()
                         if "choices" not in result or len(result["choices"]) == 0:
                             logger.error(f"Invalid OpenRouter response: {result}")
-                            raise Exception("Invalid response from OpenRouter")
+                            self.rotate_api_key()
+                            continue
                         
                         response_text = result["choices"][0]["message"]["content"]
-                        logger.info(f"✓ Got response from OpenRouter with key {key_index + 1} ({len(response_text)} chars)")
-                        self.current_key_index = key_index  # Update current key index
+                        logger.info(f"✓ Got response from OpenRouter ({len(response_text)} chars)")
                         return response_text
-                    
+                        
             except Exception as e:
-                logger.error(f"OpenRouter request with key {key_index + 1} failed: {e}")
-                if key_index < len(self.openrouter_api_keys) - 1:
-                    logger.info(f"Trying next API key...")
-                    continue
-                else:
-                    logger.error(f"All OpenRouter API keys failed")
+                logger.error(f"OpenRouter request attempt {attempt + 1} failed: {e}", exc_info=True)
+                self.rotate_api_key()
+                if attempt == max_retries - 1:
                     raise
+        
+        # If all keys fail, raise exception to trigger fallback
+        raise Exception(f"All {max_retries} API keys failed")
 
     async def _openrouter_stream(
         self,
@@ -248,21 +266,32 @@ class AIService:
         chat_history: Optional[List[Dict[str, str]]] = None,
         deep_thinking: bool = False,
     ) -> AsyncGenerator[str, None]:
-        """Stream response from OpenRouter API with key rotation on 402 errors"""
+        """Stream response from OpenRouter API with automatic key rotation on 402 errors"""
+        keys_tried = set()
+        max_retries = len(self.openrouter_api_keys)
         
-        # Try each available key
-        for key_index, api_key in enumerate(self.openrouter_api_keys):
+        for attempt in range(max_retries):
             try:
+                current_key = self.get_current_api_key()
+                
+                # Avoid infinite loop if same key fails multiple times
+                if current_key in keys_tried:
+                    self.rotate_api_key()
+                    continue
+                
+                keys_tried.add(current_key)
+                logger.info(f"Stream attempt {attempt + 1}/{max_retries}: Using API key index {self.current_key_index}")
+                
                 async with aiohttp.ClientSession() as session:
                     headers = {
-                        "Authorization": f"Bearer {api_key}",
+                        "Authorization": f"Bearer {current_key}",
                         "Content-Type": "application/json",
                         "HTTP-Referer": "https://sakha.ai",
                         "X-Title": "SAKHA AI Premium",
                     }
 
-                    # Map model name to OpenRouter model ID
-                    openrouter_model = self.model_mappings.get(model.lower(), "openai/gpt-3.5-turbo")
+                    # Map model name to OpenRouter model ID (FREE tier models only)
+                    openrouter_model = self.model_mappings.get(model.lower(), "openrouter/owl-alpha")  # Fallback to free OWL Alpha
                     
                     # Build messages
                     messages = []
@@ -285,11 +314,11 @@ class AIService:
                         "model": openrouter_model,
                         "messages": messages,
                         "temperature": temperature,
-                        "max_tokens": min(max_tokens, 1000),  # Cap at 1000 to stay within OpenRouter credits
+                        "max_tokens": min(max_tokens, 500),  # Optimized for free OpenRouter models
                         "stream": True,
                     }
 
-                    logger.info(f"Streaming OpenRouter with key {key_index + 1}/{len(self.openrouter_api_keys)} - model: {openrouter_model}")
+                    logger.info(f"Streaming OpenRouter with model: {openrouter_model} using API key index {self.current_key_index}")
                     
                     async with session.post(
                         "https://openrouter.ai/api/v1/chat/completions",
@@ -298,21 +327,15 @@ class AIService:
                         timeout=aiohttp.ClientTimeout(total=self.timeout),
                     ) as response:
                         if response.status == 402:
-                            # Insufficient credits - try next key
                             error_text = await response.text()
-                            logger.warning(f"Key {key_index + 1} insufficient credits: {error_text}")
-                            if key_index < len(self.openrouter_api_keys) - 1:
-                                logger.info(f"Rotating to next API key...")
-                                continue
-                            else:
-                                # No more keys to try
-                                logger.error(f"All API keys exhausted (insufficient credits)")
-                                raise Exception(f"All OpenRouter API keys exhausted")
-                        
-                        if response.status != 200:
+                            logger.warning(f"Stream: API key index {self.current_key_index} out of credits: {error_text}")
+                            self.rotate_api_key()
+                            continue
+                        elif response.status != 200:
                             error_text = await response.text()
-                            logger.error(f"OpenRouter API error: {response.status} - {error_text}")
-                            raise Exception(f"OpenRouter error: {error_text}")
+                            logger.error(f"OpenRouter API stream error: {response.status} - {error_text}")
+                            self.rotate_api_key()
+                            continue
                         
                         async for line in response.content:
                             line = line.decode("utf-8").strip()
@@ -321,7 +344,7 @@ class AIService:
                             
                             data_str = line[6:]
                             if data_str == "[DONE]":
-                                break
+                                return
                             
                             try:
                                 json_data = json.loads(data_str)
@@ -332,18 +355,17 @@ class AIService:
                             except json.JSONDecodeError:
                                 continue
                         
-                        # Successfully completed stream
-                        self.current_key_index = key_index  # Update current key index
+                        # Stream completed successfully
                         return
                         
             except Exception as e:
-                logger.error(f"OpenRouter stream with key {key_index + 1} failed: {e}")
-                if key_index < len(self.openrouter_api_keys) - 1:
-                    logger.info(f"Trying next API key for stream...")
-                    continue
-                else:
-                    logger.error(f"All OpenRouter API keys failed for stream")
+                logger.error(f"OpenRouter stream attempt {attempt + 1} failed: {e}", exc_info=True)
+                self.rotate_api_key()
+                if attempt == max_retries - 1:
                     raise
+        
+        # If all keys fail, raise exception to trigger fallback
+        raise Exception(f"All {max_retries} API keys failed for streaming")
 
 
 
