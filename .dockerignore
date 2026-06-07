@@ -1,0 +1,13 @@
+.dockerignore
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.env
+.git
+.gitignore
+logs/
+.pytest_cache/
+.coverage
+*.db
+node_modules/
