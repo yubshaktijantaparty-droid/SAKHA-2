@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+  # Main Bot Application
+  sakha-bot:
+    build: .
+    container_name: sakha-bot
+    ports:
+      - "8000:8000"
+    environment:
+      - MONGODB_URI=${MONGODB_URI}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ENVIRONMENT=production
+      - DEBUG_MODE=False
+    depends_on:
+      - mongodb
+    volumes:
+      - ./logs:/app/logs
+    restart: unless-stopped
+    networks:
+      - sakha-network
+
+  # MongoDB Database
+  mongodb:
+    image: mongo:7.0
+    container_name: sakha-mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_PASSWORD:-password}
+      MONGO_INITDB_DB: sakha_db
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    restart: unless-stopped
+    networks:
+      - sakha-network
+
+  # Redis Cache (Optional)
+  redis:
+    image: redis:7-alpine
+    container_name: sakha-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    networks:
+      - sakha-network
+
+  # Nginx Reverse Proxy (Optional)
+  nginx:
+    image: nginx:alpine
+    container_name: sakha-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - sakha-bot
+    restart: unless-stopped
+    networks:
+      - sakha-network
+
+volumes:
+  mongodb_data:
+  redis_data:
+
+networks:
+  sakha-network:
+    driver: bridge

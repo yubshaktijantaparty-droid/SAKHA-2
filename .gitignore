@@ -1,0 +1,368 @@
+# =====================================================
+# SAKHA BOT - COMPREHENSIVE GITIGNORE
+# =====================================================
+
+# ==================== SENSITIVE DATA - DO NOT COMMIT ====================
+# Environment Variables & Secrets
+.env
+.env.local
+.env.*.local
+.env.production
+.env.staging
+.env.development
+
+# API Keys & Tokens (NEVER COMMIT!)
+*.key
+*.pem
+*.crt
+*.pks
+.api_keys
+secrets.json
+api_keys.json
+credentials.json
+
+# OAuth Tokens
+*.token
+*.tokens
+oauth_token*
+
+# Database Credentials
+database.conf
+db.conf
+database_credentials
+
+# Private Keys
+private_key*
+private.key
+id_rsa
+id_ed25519
+
+# ==================== WHATSAPP & BOT SENSITIVE ====================
+# WhatsApp Session & Auth
+whatsapp_auth/
+session_*
+*.session
+*.QR
+*.qr_code
+wa_session/
+baileys_auth_info/
+
+# Bot Tokens & Keys
+bot_token*
+bot.token
+whatsapp_token*
+access_token*
+refresh_token*
+
+# ==================== DATABASE ====================
+# Database Files
+*.db
+*.sqlite
+*.sqlite3
+*.dbf
+*.mdb
+database.db
+sakha.db
+
+# Database Exports
+*.dump
+*.sql
+*.bak
+backups/
+database_backup/
+*.gz
+
+# MongoDB Data
+mongodb_data/
+mongo_data/
+.mongodb/
+data/db/
+
+# Redis Data
+dump.rdb
+
+# ==================== PYTHON ====================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+pip-log.txt
+pip-delete-this-directory.txt
+pytype/
+
+# Virtual Environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+.venv
+.env_venv
+
+# Poetry
+poetry.lock
+
+# Pipenv
+Pipfile.lock
+
+# PEP 582
+__pypackages__/
+
+# ==================== IDE & EDITORS ====================
+.vscode/
+.idea/
+*.iml
+*.sublime-project
+*.sublime-workspace
+.eclipse
+.project
+.pydevproject
+.classpath
+.c9/
+*.launch
+.settings/
+*.swp
+*.swo
+*~
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+
+# Vim
+[._]*.s[a-v][a-z]
+[._]*.sw[a-p]
+[._]s[a-rt][a-z]
+Session.vim
+.exrc
+.vim_history
+
+# Emacs
+*~
+\#*\#
+.\#*
+
+# ==================== TESTING & COVERAGE ====================
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.hypothesis/
+pytest.ini
+.nox
+coverage.xml
+*.cover
+
+# ==================== LOGGING ====================
+logs/
+*.log
+debug-logs/
+error-logs/
+log_*.txt
+*.log.*
+
+# ==================== MONITORING & TRACKING ====================
+.sentry/
+sentry.conf.py
+Sentry.dsn
+
+# Monitoring Data
+monitoring_data/
+metrics/
+
+# ==================== BUILD & DIST ====================
+dist/
+build/
+*.egg-info/
+*.egg
+eggs/
+.eggs/
+
+# ==================== DOCKER ====================
+docker-compose.override.yml
+.docker/
+docker.env
+Dockerfile.dev
+
+# Container Volumes (if local)
+volumes/
+docker_data/
+
+# ==================== NODEJS (if using Baileys) ====================
+node_modules/
+npm-debug.log
+yarn-error.log
+package-lock.json
+yarn.lock
+lerna-debug.log*
+.npm
+
+# ==================== CACHE ====================
+.cache/
+*.cache
+cache/
+__cache__/
+.pytest_cache
+.mypy_cache
+.dmypy.json
+dmypy.json
+
+# ==================== TEMPORARY & TEMPORARY FILES ====================
+*.tmp
+*.temp
+tmp/
+temp/
+.tmp/
+~*
+*.bak
+*.backup
+*.old
+*~
+
+# OS Generated Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+.AppleDouble
+.LSOverride
+Desktop.ini
+
+# ==================== IDE SPECIFIC ====================
+# PyCharm
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# VSCode
+.vscode/
+*.code-workspace
+launch.json
+settings.json
+
+# Sublime
+*.sublime-project
+*.sublime-workspace
+
+# NetBeans
+nbproject/
+build/
+nbbuild/
+dist/
+nbdist/
+.nb-gradle/
+
+# Eclipse
+.classpath
+.project
+.settings/
+
+# ==================== GIT ====================
+.git/
+.gitkeep
+.gitkraken
+
+# ==================== BACKUPS & ARCHIVES ====================
+backups/
+backup/
+*.bak
+*.backup
+*.zip
+*.rar
+*.7z
+*.tar.gz
+*.tar
+
+# ==================== DEPENDENCIES ====================
+vendor/
+*.lock
+Gemfile.lock
+
+# ==================== MISC ====================
+.env.*.swp
+.env.*.swo
+secrets/
+private/
+confidential/
+secure_data/
+
+# Config Files (if containing secrets)
+config.local.json
+settings.local.json
+local_settings.py
+
+# ==================== PROJECT SPECIFIC ====================
+# SAKHA Bot Specific
+whatsapp_sessions/
+authentication/
+.auth/
+credentials/
+api_credentials/
+.secrets/
+
+# AI Model Cache
+model_cache/
+.model_cache/
+models/cache/
+
+# Upload Directories (if they contain real data)
+uploads/
+temp_uploads/
+user_data/
+
+# ==================== NEVER COMMIT ====================
+# ALWAYS IGNORE THESE
+.env
+api_keys*
+*credentials*
+*secret*
+*token*
+*password*
+*apikey*
+*.key
+*.pem
+*.key.pub
+
+# =====================================================
+# RULES
+# =====================================================
+# 1. Environment files are ALWAYS ignored
+# 2. API keys NEVER go to git
+# 3. Database dumps are ignored
+# 4. Private keys are ignored
+# 5. Temporary files are ignored
+# 6. Build artifacts are ignored
+# 7. Node modules are ignored (if using Node.js)
+# 8. IDE configurations are ignored
+# 9. OS-specific files are ignored
+# 10. Logs and caches are ignored
+
+# =====================================================
+# SAFETY: If you accidentally committed any secrets,
+# IMMEDIATELY ROTATE THE KEYS!
+# Run: git rm -r --cached . && git add . && git commit -m "Remove secrets"
+# Then regenerate all API keys
+# =====================================================

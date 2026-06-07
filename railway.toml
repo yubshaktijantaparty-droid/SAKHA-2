@@ -1,0 +1,6 @@
+# Railway Deployment Configuration
+
+# This file is automatically read by Railway
+# No need to modify unless you want custom behavior
+
+root = "./"
