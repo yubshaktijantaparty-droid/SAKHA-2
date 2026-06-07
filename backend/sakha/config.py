@@ -45,7 +45,43 @@ class Settings:
     DEEPSEEK_MODELS: List[str] = ["deepseek-chat", "deepseek-reasoner"]
 
     # AI Services - OpenRouter (Multi-model support)
-    OPENROUTER_API_KEY: str = os.getenv("OPENROUTER_API_KEY", "")
+    # Load all available OpenRouter API keys for key rotation
+    _available_openrouter_keys = []
+    
+    # Primary keys
+    if os.getenv("OPENROUTER_API_KEY"):
+        _available_openrouter_keys.append(os.getenv("OPENROUTER_API_KEY"))
+    if os.getenv("NEMOTRON_3_NANO_OMNI_API_KEY"):
+        _available_openrouter_keys.append(os.getenv("NEMOTRON_3_NANO_OMNI_API_KEY"))
+    if os.getenv("NEMOTRON_3_NANO_30B_API_KEY"):
+        _available_openrouter_keys.append(os.getenv("NEMOTRON_3_NANO_30B_API_KEY"))
+    if os.getenv("NEMOTRON_3_ULTRA_550B_API_KEY"):
+        _available_openrouter_keys.append(os.getenv("NEMOTRON_3_ULTRA_550B_API_KEY"))
+    if os.getenv("NEMOTRON_3_SUPER_120B_API_KEY"):
+        _available_openrouter_keys.append(os.getenv("NEMOTRON_3_SUPER_120B_API_KEY"))
+    if os.getenv("QWEN_QWEN3_CODER_API_KEY"):
+        _available_openrouter_keys.append(os.getenv("QWEN_QWEN3_CODER_API_KEY"))
+    if os.getenv("LAGUNA_XS_API_KEY"):
+        _available_openrouter_keys.append(os.getenv("LAGUNA_XS_API_KEY"))
+    if os.getenv("LAGUNA_M_API_KEY"):
+        _available_openrouter_keys.append(os.getenv("LAGUNA_M_API_KEY"))
+    if os.getenv("VIDEO_INPUT_1_API_KEY"):
+        _available_openrouter_keys.append(os.getenv("VIDEO_INPUT_1_API_KEY"))
+    if os.getenv("VIDEO_INPUT_2_API_KEY"):
+        _available_openrouter_keys.append(os.getenv("VIDEO_INPUT_2_API_KEY"))
+    if os.getenv("AUDIO_INPUT_API_KEY"):
+        _available_openrouter_keys.append(os.getenv("AUDIO_INPUT_API_KEY"))
+    
+    # Fallback keys from other providers
+    if os.getenv("DEEPSEEK_API_KEY"):
+        _available_openrouter_keys.append(os.getenv("DEEPSEEK_API_KEY"))
+    if os.getenv("OPENAI_API_KEY"):
+        _available_openrouter_keys.append(os.getenv("OPENAI_API_KEY"))
+    
+    OPENROUTER_API_KEYS: List[str] = list(dict.fromkeys(_available_openrouter_keys))  # Remove duplicates
+    
+    # Default to first key for backward compatibility
+    OPENROUTER_API_KEY: str = OPENROUTER_API_KEYS[0] if OPENROUTER_API_KEYS else ""
 
     # AI Services - General
     DEFAULT_AI_PROVIDER: str = os.getenv("DEFAULT_AI_PROVIDER", "openai")
