@@ -7,7 +7,7 @@ from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from pymongo import MongoClient
 from pymongo.database import Database
-from motor.motor_asyncio import AsyncClient as MotorAsyncClient, AsyncDatabase
+from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 import asyncio
 from datetime import datetime
 
@@ -48,7 +48,7 @@ class DatabaseManager:
     async def _connect_mongodb(self):
         """Connect to MongoDB"""
         try:
-            self.motor_client = MotorAsyncClient(settings.mongodb_uri)
+            self.motor_client = AsyncIOMotorClient(settings.mongodb_uri)
             self.motor_db = self.motor_client[settings.mongodb_db_name]
             # Test connection
             await self.motor_client.admin.command('ping')
@@ -83,7 +83,7 @@ class DatabaseManager:
             print(f"✗ PostgreSQL Connection Error: {e}")
             raise
     
-    def get_mongodb_db(self) -> AsyncDatabase:
+    def get_mongodb_db(self) -> AsyncIOMotorDatabase:
         """Get MongoDB database instance"""
         if not self.motor_db:
             raise RuntimeError("MongoDB not connected")
@@ -105,7 +105,7 @@ db_manager = DatabaseManager()
 class MongoDBOperations:
     """MongoDB Operations"""
     
-    def __init__(self, db: AsyncDatabase):
+    def __init__(self, db: AsyncIOMotorDatabase):
         self.db = db
     
     async def create_user(self, user_id: str, data: Dict[str, Any]) -> bool:
