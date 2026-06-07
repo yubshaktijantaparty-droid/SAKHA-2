@@ -13,11 +13,7 @@ export default function ChatInput({ onSendMessage, isLoading }: ChatInputProps) 
   const { selectedModel, setSelectedModel } = useAppStore()
 
   const defaultModels = [
-    { id: 'gpt-4o', name: 'OpenAI GPT-4o' },
-    { id: 'gpt-4-turbo', name: 'OpenAI GPT-4 Turbo' },
-    { id: 'gpt-3.5-turbo', name: 'OpenAI GPT-3.5 Turbo' },
-    { id: 'claude-3', name: 'Claude 3' },
-    { id: 'gemini-pro', name: 'Google Gemini Pro' },
+    { id: 'sakha-5.0', name: 'SAKHA-5.0 Unified AI' }
   ]
 
   const [models, setModels] = useState<any[]>(defaultModels)
@@ -28,15 +24,17 @@ export default function ChatInput({ onSendMessage, isLoading }: ChatInputProps) 
         const data = await chatAPI.getAvailableModels()
         if (data.models && data.models.length > 0) {
           setModels(data.models)
+          setSelectedModel('sakha-5.0')
         }
       } catch (error) {
         console.error('Failed to load models:', error)
-        // Keep default models
+        // Keep default Sakha-5.0 model
+        setSelectedModel('sakha-5.0')
       }
     }
 
     fetchModels()
-  }, [])
+  }, [setSelectedModel])
 
   const handleSend = async () => {
     if (!message.trim() || isLoading) return

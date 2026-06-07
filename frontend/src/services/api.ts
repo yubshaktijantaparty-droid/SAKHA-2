@@ -48,7 +48,7 @@ export const chatAPI = {
     try {
       const response = await api.post('/chat', {
         message,
-        model: model || 'gpt-4o',
+        model: model || 'sakha-5.0',
       })
       return response.data
     } catch (error) {
@@ -56,7 +56,7 @@ export const chatAPI = {
       if (isInDemoMode()) {
         return {
           message: getDemoResponse(message),
-          model: model || 'gpt-4o',
+          model: 'sakha-5.0',
           demo: true,
         }
       }
@@ -68,7 +68,7 @@ export const chatAPI = {
     try {
       const response = await api.post('/chat/stream', {
         message,
-        model: model || 'gpt-4o',
+        model: model || 'sakha-5.0',
       }, {
         responseType: 'stream',
       })
@@ -78,7 +78,7 @@ export const chatAPI = {
       if (isInDemoMode()) {
         return {
           message: getDemoResponse(message),
-          model: model || 'gpt-4o',
+          model: 'sakha-5.0',
           demo: true,
         }
       }
@@ -91,14 +91,10 @@ export const chatAPI = {
       const response = await api.get('/chat/models')
       return response.data
     } catch (error) {
-      // Return default models if backend fails
+      // Return Sakha-5.0 as default if backend fails
       return {
         models: [
-          { id: 'gpt-4o', name: 'OpenAI GPT-4o' },
-          { id: 'gpt-4-turbo', name: 'OpenAI GPT-4 Turbo' },
-          { id: 'gpt-3.5-turbo', name: 'OpenAI GPT-3.5 Turbo' },
-          { id: 'claude-3', name: 'Claude 3' },
-          { id: 'gemini-pro', name: 'Google Gemini Pro' },
+          { id: 'sakha-5.0', name: 'SAKHA-5.0 Unified AI' },
         ]
       }
     }

@@ -1,4 +1,4 @@
-"""Chat Endpoints - With Database Persistence"""
+"""Chat Endpoints - With Database Persistence and Sakha-5.0 Integration"""
 
 from fastapi import APIRouter, HTTPException, Header, Query
 from fastapi.responses import StreamingResponse
@@ -10,12 +10,14 @@ import json
 
 from sakha.services.ai_service import AIService
 from sakha.services.database_service import db_service
+from sakha.services.model_router import get_model_selector
 from sakha.config import settings
 import logging
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
 ai_service = AIService()
+model_selector = get_model_selector()
 
 
 # ==================== MODELS ====================
@@ -57,18 +59,36 @@ class CreateChatRequest(BaseModel):
 
 @router.post("/chat")
 async def chat(request: ChatRequest, user_id: str = Header(None)):
-    """Send a chat message with database persistence"""
+    """Send a chat message with Sakha-5.0 intelligent routing"""
     try:
         if not request.message:
             raise HTTPException(status_code=400, detail="Message cannot be empty")
         
         user_id = user_id or request.user_id or "anonymous"
-        model = request.model or settings.DEFAULT_AI_PROVIDER
+        
+        # Use model router to select best model for this message
+        model_profile, task_type, routing_reason = model_selector.get_model_for_message(
+            request.message,
+            user_preference=request.model,
+            priority="quality"
+        )
+        
+        if not model_profile:
+            # Fallback if no model available
+            logger.warning("No suitable model found, using fallback response")
+            return ChatResponse(
+                chat_id="fallback",
+                message="System: No AI models available. Please try again later.",
+                model="sakha-5.0",
+                timestamp=datetime.utcnow(),
+            )
+        
+        model_id = model_profile.model_id
         
         # Create chat if doesn't exist
         chat_id = request.chat_id
         if not chat_id:
-            chat = await db_service.save_chat(user_id, "New Chat", model)
+            chat = await db_service.save_chat(user_id, "New Chat", "sakha-5.0")
             chat_id = chat["_id"]
         
         # Save user message
@@ -77,13 +97,13 @@ async def chat(request: ChatRequest, user_id: str = Header(None)):
             user_id=user_id,
             role="user",
             content=request.message,
-            model=model
+            model="sakha-5.0"
         )
         
-        # Get AI response
+        # Get AI response using selected model
         response = await ai_service.get_response(
             message=request.message,
-            model=model,
+            model=model_id,
             system_prompt=request.system_prompt,
             temperature=request.temperature,
             max_tokens=request.max_tokens,
@@ -95,15 +115,16 @@ async def chat(request: ChatRequest, user_id: str = Header(None)):
             user_id=user_id,
             role="assistant",
             content=response,
-            model=model
+            model="sakha-5.0"
         )
         
-        logger.info(f"Chat message processed for user {user_id}")
+        logger.info(f"Chat message processed for user {user_id} using model {model_profile.name}")
+        logger.info(f"Task type: {task_type.value}, Routing reason: {routing_reason}")
         
         return ChatResponse(
             chat_id=chat_id,
             message=response,
-            model=model,
+            model="sakha-5.0",
             timestamp=datetime.utcnow(),
         )
         
@@ -114,18 +135,32 @@ async def chat(request: ChatRequest, user_id: str = Header(None)):
 
 @router.post("/chat/stream")
 async def chat_stream(request: ChatRequest, user_id: str = Header(None)):
-    """Stream chat response with database persistence"""
+    """Stream chat response with Sakha-5.0 intelligent routing"""
     try:
         if not request.message:
             raise HTTPException(status_code=400, detail="Message cannot be empty")
         
         user_id = user_id or request.user_id or "anonymous"
-        model = request.model or settings.DEFAULT_AI_PROVIDER
+        
+        # Use model router to select best model for this message
+        model_profile, task_type, routing_reason = model_selector.get_model_for_message(
+            request.message,
+            user_preference=request.model,
+            priority="quality"
+        )
+        
+        if not model_profile:
+            # Fallback if no model available
+            async def error_generator():
+                yield f"data: {json.dumps({'chunk': 'System: No AI models available. Please try again later.'})}\n\n"
+            return StreamingResponse(error_generator(), media_type="text/event-stream")
+        
+        model_id = model_profile.model_id
         
         # Create chat if doesn't exist
         chat_id = request.chat_id
         if not chat_id:
-            chat = await db_service.save_chat(user_id, "New Chat", model)
+            chat = await db_service.save_chat(user_id, "New Chat", "sakha-5.0")
             chat_id = chat["_id"]
         
         # Save user message
@@ -134,15 +169,17 @@ async def chat_stream(request: ChatRequest, user_id: str = Header(None)):
             user_id=user_id,
             role="user",
             content=request.message,
-            model=model
+            model="sakha-5.0"
         )
+        
+        logger.info(f"Stream: Task type: {task_type.value}, Model: {model_profile.name}, Reason: {routing_reason}")
         
         # Stream response from AI service
         async def response_generator():
             full_response = ""
             async for chunk in ai_service.stream_response(
                 message=request.message,
-                model=model,
+                model=model_id,
                 system_prompt=request.system_prompt,
                 temperature=request.temperature,
                 max_tokens=request.max_tokens,
@@ -156,7 +193,7 @@ async def chat_stream(request: ChatRequest, user_id: str = Header(None)):
                 user_id=user_id,
                 role="assistant",
                 content=full_response,
-                model=model
+                model="sakha-5.0"
             )
         
         return StreamingResponse(response_generator(), media_type="text/event-stream")
@@ -254,11 +291,41 @@ async def archive_chat(chat_id: str):
 
 @router.get("/chat/models")
 async def get_available_models():
-    """Get list of available AI models"""
+    """Get list of available AI models - Only Sakha-5.0 unified model"""
+    
+    # Get all underlying available models info
+    underlying_models = []
+    for model in model_selector.get_available_models():
+        underlying_models.append({
+            "id": model.model_id,
+            "name": model.name,
+            "capabilities": model.capabilities,
+            "speed": model.speed,
+            "quality": model.quality,
+            "best_for": [t.value for t in model.best_for],
+        })
+    
     return {
         "models": [
-            {"id": "gpt-4o", "name": "OpenAI GPT-4o", "provider": "OpenAI", "available": bool(settings.OPENAI_API_KEY)},
-            {"id": "deepseek-chat", "name": "DeepSeek Chat", "provider": "DeepSeek", "available": bool(settings.DEEPSEEK_API_KEY)},
-            {"id": "gemini-2.5-flash", "name": "Google Gemini 2.5 Flash", "provider": "Google", "available": bool(settings.GEMINI_API_KEY)},
+            {
+                "id": "sakha-5.0",
+                "name": "SAKHA-5.0 Unified AI",
+                "provider": "Multi-Model",
+                "description": "Intelligent unified model that automatically selects the best AI model based on task requirements",
+                "available": len(underlying_models) > 0,
+                "underlying_models": underlying_models,
+                "total_models": len(underlying_models),
+                "capabilities": [
+                    "Text Generation",
+                    "Code Generation", 
+                    "Creative Writing",
+                    "Analysis & Summary",
+                    "Video Processing",
+                    "Audio Processing",
+                    "Image Generation",
+                    "Embedding & Vectors",
+                    "Multimodal Processing"
+                ]
+            }
         ]
     }
