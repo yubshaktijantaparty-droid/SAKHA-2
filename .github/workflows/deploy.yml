@@ -40,6 +40,9 @@ jobs:
           VITE_REPO_NAME: sakha-ai
           NODE_ENV: production
       
+      - name: Disable Jekyll
+        run: touch ./frontend/dist/.nojekyll
+      
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:

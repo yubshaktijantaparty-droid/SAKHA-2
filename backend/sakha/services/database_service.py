@@ -17,6 +17,11 @@ class DatabaseService:
     async def save_chat(user_id: str, title: str, model: str = "gpt-4o") -> Dict[str, Any]:
         """Create a new chat session"""
         try:
+            # Check if MongoDB is available
+            if not mongodb.db:
+                logger.warning("MongoDB not available - chat not persisted")
+                return {"_id": "demo-" + str(datetime.utcnow().timestamp()), "user_id": user_id, "title": title, "model": model}
+            
             chat_doc = {
                 "user_id": user_id,
                 "title": title,
@@ -60,6 +65,12 @@ class DatabaseService:
                 "likes": 0,
                 "dislikes": 0,
             }
+            
+            # Check if MongoDB is available
+            if not mongodb.db:
+                logger.warning("MongoDB not available - message not persisted")
+                message_doc["_id"] = "demo-" + str(datetime.utcnow().timestamp())
+                return message_doc
             
             result = await mongodb.db.messages.insert_one(message_doc)
             message_doc["_id"] = str(result.inserted_id)

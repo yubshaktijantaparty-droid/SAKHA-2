@@ -260,7 +260,6 @@ export default function Message({ message }: MessageProps) {
   )
 }
 ```
-{% endraw %}
 
 ## 3. ChatInput Component (Enhanced)
 

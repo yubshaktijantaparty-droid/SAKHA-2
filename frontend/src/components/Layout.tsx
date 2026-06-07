@@ -2,7 +2,7 @@ import React from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
 import { Menu, X, LogOut } from 'lucide-react'
 import { useAppStore } from '../stores/app'
-import { supabase } from '../lib/supabase'
+import { supabase, hasSupabase } from '../lib/supabase'
 import { Session } from '@supabase/supabase-js'
 import Sidebar from './Sidebar'
 import ThemeToggle from './ThemeToggle'
@@ -21,7 +21,12 @@ export default function Layout({ session }: LayoutProps) {
   const { sidebarOpen, toggleSidebar } = useAppStore()
 
   const handleLogout = async () => {
-    await supabase.auth.signOut()
+    if (hasSupabase && supabase?.auth) {
+      await supabase.auth.signOut()
+    } else {
+      // Demo mode logout
+      localStorage.removeItem('demo_user')
+    }
     toast.success('Logged out successfully')
   }
 

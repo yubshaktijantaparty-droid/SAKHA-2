@@ -1,6 +1,6 @@
 """MongoDB database connection and setup"""
 
-from motor.motor_asyncio import AsyncClient, AsyncDatabase
+from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 from pymongo import ASCENDING, DESCENDING, TEXT
 import logging
 from sakha.config import settings
@@ -11,14 +11,14 @@ logger = logging.getLogger(__name__)
 class MongoDB:
     """MongoDB database handler"""
     
-    client: AsyncClient = None
-    db: AsyncDatabase = None
+    client: AsyncIOMotorClient = None
+    db: AsyncIOMotorDatabase = None
     
     @classmethod
     async def connect_db(cls):
         """Connect to MongoDB"""
         try:
-            cls.client = AsyncClient(settings.MONGODB_URI)
+            cls.client = AsyncIOMotorClient(settings.MONGODB_URI)
             cls.db = cls.client[settings.MONGODB_DB_NAME]
             
             # Verify connection
@@ -29,8 +29,10 @@ class MongoDB:
             await cls._create_indexes()
             
         except Exception as e:
-            logger.error(f"✗ Failed to connect to MongoDB: {e}")
-            raise
+            logger.warning(f"⚠ MongoDB connection failed: {e}")
+            logger.warning("Running in demo mode without persistence")
+            cls.client = None
+            cls.db = None
     
     @classmethod
     async def close_db(cls):

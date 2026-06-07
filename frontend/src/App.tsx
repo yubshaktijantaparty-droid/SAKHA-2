@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
-import { supabase } from './lib/supabase'
+import { supabase, hasSupabase } from './lib/supabase'
 import { Session } from '@supabase/supabase-js'
 import Layout from './components/Layout'
 import { Login } from './components/Login'
@@ -34,6 +34,19 @@ export default function App() {
   }, [theme])
 
   useEffect(() => {
+    // Only check auth if Supabase is available
+    if (!hasSupabase || !supabase?.auth) {
+      // In demo mode, load demo user from localStorage
+      const demoUser = localStorage.getItem('demo_user')
+      if (demoUser) {
+        // Create a mock session for demo mode
+        setSession(JSON.parse(demoUser) as any)
+      }
+      setIsLoading(false)
+      return
+    }
+
+    // Real Supabase auth check
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
       setIsLoading(false)
