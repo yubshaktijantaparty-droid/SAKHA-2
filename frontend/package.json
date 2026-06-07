@@ -2,15 +2,15 @@
   "name": "sakha-ai-premium",
   "version": "2.0.0",
   "type": "module",
-  "homepage": "https://your-username.github.io/sakha-ai",
+  "homepage": "https://yubshaktijantaparty-droid.github.io/SAKHA-2",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "build:prod": "VITE_API_URL=${VITE_API_URL:-http://localhost:8000} VITE_REPO_NAME=${VITE_REPO_NAME:-sakha-ai} vite build",
+    "build:prod": "VITE_API_URL=${VITE_API_URL:-http://localhost:8000} VITE_REPO_NAME=${VITE_REPO_NAME:-SAKHA-2} vite build",
     "preview": "vite preview",
     "lint": "eslint . --ext .ts,.tsx",
     "deploy": "npm run build && gh-pages -d dist",
-    "deploy:prod": "VITE_API_URL=${VITE_API_URL} VITE_REPO_NAME=sakha-ai npm run deploy"
+    "deploy:prod": "VITE_API_URL=${VITE_API_URL} VITE_REPO_NAME=SAKHA-2 npm run deploy"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.38.0",
