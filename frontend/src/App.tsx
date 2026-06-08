@@ -11,7 +11,7 @@ import ImageGenerator from './pages/ImageGenerator'
 import { useAppStore } from './stores/app'
 
 export default function App() {
-  const [session, setSession] = useState<Session | null>(null)
+  const [session, setSession] = useState<Session | any>(null)
   const [isLoading, setIsLoading] = useState(true)
   const theme = useAppStore((state) => state.theme)
 
@@ -86,6 +86,19 @@ export default function App() {
     )
   }
 
+  const handleDemoLoginSuccess = () => {
+    const demoUser = localStorage.getItem('demo_user')
+    if (demoUser) {
+      setSession(JSON.parse(demoUser) as Session)
+    } else {
+      setSession(null)
+    }
+  }
+
+  const handleDemoLogout = () => {
+    setSession(null)
+  }
+
   const basename = import.meta.env.BASE_URL || '/'
 
   return (
@@ -94,10 +107,10 @@ export default function App() {
         <Toaster position="bottom-right" />
         <Routes>
           <Route path="/" element={session ? <Navigate to="/app/chat" replace /> : <LandingPage />} />
-          <Route path="/login" element={session ? <Navigate to="/app/chat" replace /> : <Login onLoginSuccess={() => {}} />} />
+          <Route path="/login" element={session ? <Navigate to="/app/chat" replace /> : <Login onLoginSuccess={handleDemoLoginSuccess} />} />
           <Route
             path="/app"
-            element={session ? <Layout session={session} /> : <Navigate to="/login" replace />}
+            element={session ? <Layout session={session} onLogout={handleDemoLogout} /> : <Navigate to="/login" replace />}
           >
             <Route index element={<Navigate to="chat" replace />} />
             <Route path="chat" element={<ChatView />} />

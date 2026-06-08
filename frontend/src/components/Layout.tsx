@@ -10,6 +10,7 @@ import toast from 'react-hot-toast'
 
 interface LayoutProps {
   session?: Session | null
+  onLogout?: () => void
 }
 
 const navItems = [
@@ -17,7 +18,7 @@ const navItems = [
   { label: 'Image Studio', to: '/app/images' },
 ]
 
-export default function Layout({ session }: LayoutProps) {
+export default function Layout({ session, onLogout }: LayoutProps) {
   const { sidebarOpen, toggleSidebar } = useAppStore()
 
   const handleLogout = async () => {
@@ -26,6 +27,7 @@ export default function Layout({ session }: LayoutProps) {
     } else {
       // Demo mode logout
       localStorage.removeItem('demo_user')
+      onLogout?.()
     }
     toast.success('Logged out successfully')
   }

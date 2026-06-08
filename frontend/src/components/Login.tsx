@@ -31,11 +31,15 @@ export function Login({ onLoginSuccess }: LoginProps) {
       // Use demo authentication if Supabase is not available
       if (!hasSupabase) {
         // Demo mode - accept any valid credentials
+        const demoSession = {
+          user: { email },
+          type: isSignUp ? 'signup' : 'signin',
+        }
+        localStorage.setItem('demo_user', JSON.stringify(demoSession))
+
         if (isSignUp) {
-          localStorage.setItem('demo_user', JSON.stringify({ email, type: 'signup' }))
           toast.success('Account created successfully!')
         } else {
-          localStorage.setItem('demo_user', JSON.stringify({ email, type: 'signin' }))
           toast.success('Logged in successfully!')
         }
         
