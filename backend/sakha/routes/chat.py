@@ -346,41 +346,109 @@ async def archive_chat(chat_id: str):
 
 @router.get("/chat/models")
 async def get_available_models():
-    """Get list of available AI models - Only Sakha-5.0 unified model"""
+    """Get list of all available AI models with standardized naming format"""
     
-    # Get all underlying available models info
-    underlying_models = []
+    # Capability mapping for standardized display
+    capability_map = {
+        "text_generation": "Text Generation",
+        "code_generation": "Code Generation",
+        "creative_writing": "Creative Writing",
+        "analysis": "Analysis",
+        "summary": "Summary",
+        "question_answer": "Q&A",
+        "video_processing": "Video Processing",
+        "audio_processing": "Audio Processing",
+        "image_generation": "Image Generation",
+        "embedding": "Embeddings",
+        "deep_thinking": "Deep Thinking",
+        "general": "General Purpose",
+    }
+    
+    # Provider mapping for standardized display
+    provider_map = {
+        "nemotron": "NVIDIA",
+        "qwen": "Qwen",
+        "laguna": "Poolside",
+        "video": "OpenRouter",
+        "audio": "OpenRouter",
+        "image": "OpenRouter",
+        "embed": "OpenRouter",
+    }
+    
+    models = []
+    
+    # Add SAKHA-5.0 Unified Model first
+    underlying_count = 0
+    underlying_models_list = []
     for model in model_selector.get_available_models():
-        underlying_models.append({
+        underlying_count += 1
+        underlying_models_list.append({
             "id": model.model_id,
             "name": model.name,
-            "capabilities": model.capabilities,
+        })
+    
+    models.append({
+        "id": "sakha-5.0",
+        "name": "SAKHA-5.0 Unified AI",
+        "provider": "Multi-Model",
+        "description": "Intelligent unified model that automatically selects the best AI model based on task requirements",
+        "available": True,
+        "enabled": True,
+        "speed": 7,
+        "quality": 9,
+        "capabilities": ["Text Generation", "Code Generation", "Creative Writing", "Analysis", "Q&A", "Deep Thinking"],
+        "underlying_model_count": underlying_count,
+    })
+    
+    # Add all individual models
+    for model in model_selector.get_available_models():
+        # Determine provider
+        provider = "OpenRouter"
+        for key, prov in provider_map.items():
+            if key in model.model_id.lower():
+                provider = prov
+                break
+        
+        # Format capabilities
+        capabilities = []
+        for cap in model.capabilities:
+            cap_key = cap.lower().replace(" ", "_").replace("-", "_")
+            for old, new in [
+                ("long_form_generation", "text_generation"),
+                ("fast_response", "general"),
+                ("balanced_performance", "general"),
+                ("code", "code_generation"),
+                ("debugging", "code_generation"),
+                ("technical", "code_generation"),
+            ]:
+                cap = cap.replace(old, new)
+            if cap in capability_map:
+                if capability_map[cap] not in capabilities:
+                    capabilities.append(capability_map[cap])
+        
+        if not capabilities:
+            capabilities = ["General Purpose"]
+        
+        models.append({
+            "id": model.model_id,
+            "name": model.name,
+            "provider": provider,
+            "description": f"Optimized for: {', '.join([t.value.replace('_', ' ').title() for t in model.best_for[:2]])}",
+            "available": model.available,
+            "enabled": model.available,
             "speed": model.speed,
             "quality": model.quality,
+            "cost": model.cost,
+            "token_limit": model.token_limit,
+            "capabilities": capabilities,
             "best_for": [t.value for t in model.best_for],
+            "short_answer_score": model.short_answer_score,
+            "long_answer_score": model.long_answer_score,
+            "deep_thinking_capable": model.deep_thinking_capable,
         })
     
     return {
-        "models": [
-            {
-                "id": "sakha-5.0",
-                "name": "SAKHA-5.0 Unified AI",
-                "provider": "Multi-Model",
-                "description": "Intelligent unified model that automatically selects the best AI model based on task requirements",
-                "available": len(underlying_models) > 0,
-                "underlying_models": underlying_models,
-                "total_models": len(underlying_models),
-                "capabilities": [
-                    "Text Generation",
-                    "Code Generation", 
-                    "Creative Writing",
-                    "Analysis & Summary",
-                    "Video Processing",
-                    "Audio Processing",
-                    "Image Generation",
-                    "Embedding & Vectors",
-                    "Multimodal Processing"
-                ]
-            }
-        ]
+        "models": models,
+        "total_count": len(models),
+        "available_count": sum(1 for m in models if m["available"]),
     }

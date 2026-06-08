@@ -8,28 +8,57 @@ interface ChatInputProps {
   isLoading?: boolean
 }
 
+interface ModelOption {
+  id: string
+  name: string
+  provider?: string
+  description?: string
+  available?: boolean
+  enabled?: boolean
+}
+
 export default function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
   const [message, setMessage] = useState('')
   const [deepThinking, setDeepThinking] = useState(false)
   const { selectedModel, setSelectedModel } = useAppStore()
 
-  const defaultModels = [
-    { id: 'sakha-5.0', name: 'SAKHA-5.0 Unified AI' }
+  const defaultModels: ModelOption[] = [
+    { id: 'sakha-5.0', name: 'SAKHA-5.0 Unified AI', provider: 'Multi-Model', available: true }
   ]
 
-  const [models, setModels] = useState<any[]>(defaultModels)
+  const [models, setModels] = useState<ModelOption[]>(defaultModels)
+  const [groupedModels, setGroupedModels] = useState<{ [key: string]: ModelOption[] }>({})
 
   useEffect(() => {
     const fetchModels = async () => {
       try {
         const data = await chatAPI.getAvailableModels()
         if (data.models && data.models.length > 0) {
-          setModels(data.models)
-          setSelectedModel('sakha-5.0')
+          // Filter to only available/enabled models
+          const availableModels = data.models.filter((m: any) => m.available !== false && m.enabled !== false)
+          setModels(availableModels)
+          
+          // Group models by provider for better display
+          const grouped: { [key: string]: ModelOption[] } = {}
+          availableModels.forEach((model: ModelOption) => {
+            const provider = model.provider || 'Other'
+            if (!grouped[provider]) {
+              grouped[provider] = []
+            }
+            grouped[provider].push(model)
+          })
+          setGroupedModels(grouped)
+          
+          // Set default to sakha-5.0 if available
+          if (availableModels.some((m: any) => m.id === 'sakha-5.0')) {
+            setSelectedModel('sakha-5.0')
+          } else if (availableModels.length > 0) {
+            setSelectedModel(availableModels[0].id)
+          }
         }
       } catch (error) {
         console.error('Failed to load models:', error)
-        // Keep default Sakha-5.0 model
+        setModels(defaultModels)
         setSelectedModel('sakha-5.0')
       }
     }
@@ -55,25 +84,41 @@ export default function ChatInput({ onSendMessage, isLoading }: ChatInputProps) 
   return (
     <div className="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-darker-bg p-4">
       {/* Model Selector & Deep Thinking */}
-      <div className="mb-3 flex items-center gap-2">
-        <label className="text-sm text-gray-600 dark:text-gray-400">Model:</label>
+      <div className="mb-3 flex items-center gap-2 flex-wrap">
+        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Model:</label>
         <select
           value={selectedModel}
           onChange={(e) => setSelectedModel(e.target.value)}
-          className="px-3 py-1 text-sm bg-gray-100 dark:bg-gray-700 rounded border border-gray-300 dark:border-gray-600 focus:outline-none"
+          disabled={isLoading}
+          className="px-3 py-2 text-sm bg-white dark:bg-gray-700 rounded border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50 min-w-[250px]"
+          title={`Selected model: ${models.find(m => m.id === selectedModel)?.name || selectedModel}`}
         >
-          {models.map((model) => (
-            <option key={model.id} value={model.id}>
-              {model.name}
-            </option>
-          ))}
+          {/* Group models by provider if we have grouped data */}
+          {Object.keys(groupedModels).length > 0 ? (
+            Object.entries(groupedModels).map(([provider, providerModels]) => (
+              <optgroup key={provider} label={provider}>
+                {providerModels.map((model) => (
+                  <option key={model.id} value={model.id}>
+                    {model.name} {model.description ? `- ${model.description.substring(0, 30)}...` : ''}
+                  </option>
+                ))}
+              </optgroup>
+            ))
+          ) : (
+            // Fallback: flat list
+            models.map((model) => (
+              <option key={model.id} value={model.id}>
+                {model.name}
+              </option>
+            ))
+          )}
         </select>
         
         {/* Deep Thinking Toggle */}
         <button
           onClick={() => setDeepThinking(!deepThinking)}
           disabled={isLoading}
-          className={`px-3 py-1 text-sm rounded border transition-colors flex items-center gap-1 ${
+          className={`px-3 py-2 text-sm rounded border transition-colors flex items-center gap-1 whitespace-nowrap ${
             deepThinking
               ? 'bg-purple-600 text-white border-purple-600'
               : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 border-gray-300 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-600'
@@ -84,6 +129,13 @@ export default function ChatInput({ onSendMessage, isLoading }: ChatInputProps) 
           <span>Deep Thinking</span>
         </button>
       </div>
+
+      {/* Model Info */}
+      {selectedModel && (
+        <div className="mb-2 text-xs text-gray-500 dark:text-gray-400 px-3 py-1 bg-gray-50 dark:bg-gray-800 rounded">
+          {models.find(m => m.id === selectedModel)?.description || `Using: ${selectedModel}`}
+        </div>
+      )}
 
       {/* Input Area */}
       <div className="flex gap-3">
@@ -101,7 +153,7 @@ export default function ChatInput({ onSendMessage, isLoading }: ChatInputProps) 
         <button
           onClick={handleSend}
           disabled={isLoading || !message.trim()}
-          className="px-4 py-3 bg-primary text-white rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+          className="px-4 py-3 bg-primary text-white rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2 whitespace-nowrap"
         >
           {isLoading ? (
             <>
@@ -109,7 +161,10 @@ export default function ChatInput({ onSendMessage, isLoading }: ChatInputProps) 
               <span className="text-sm">Sending...</span>
             </>
           ) : (
-            <Send size={18} />
+            <>
+              <Send size={18} />
+              <span className="text-sm hidden sm:inline">Send</span>
+            </>
           )}
         </button>
       </div>

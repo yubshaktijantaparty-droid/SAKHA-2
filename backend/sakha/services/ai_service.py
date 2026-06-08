@@ -28,19 +28,62 @@ class AIService:
         logger.info(f"[OK] Gemini API Key available: {bool(self.gemini_api_key)}")
         logger.info(f"[OK] DeepSeek API Key available: {bool(self.deepseek_api_key)}")
         
-        # Model mappings for OpenRouter (using FREE tier models with no credit requirements)
+        # Model mappings for OpenRouter - Using openrouter/auto for reliable responses
+        # openrouter/auto intelligently routes to the best available model
         self.model_mappings = {
-            "sakha-5.0": "openrouter/owl-alpha",  # FREE: Best quality reasoning model
-            "nemotron-3-ultra": "nvidia/nemotron-3-ultra-550b-a55b:free",  # FREE: NVIDIA ultra model
-            "nemotron-3-super": "nvidia/nemotron-3-super-120b-a12b:free",  # FREE: NVIDIA super model
-            "nemotron-3-nano": "qwen/qwen3-coder:free",  # FREE: Qwen coder model
-            "qwen3-coder": "qwen/qwen3-coder:free",  # FREE: Code generation with Qwen
-            "gpt-4o": "openrouter/owl-alpha",  # FREE: Using Owl Alpha instead
-            "gpt-4": "openrouter/owl-alpha",  # FREE: Using Owl Alpha instead
-            "gpt-3.5": "qwen/qwen3-coder:free",  # FREE: Qwen for lighter tasks
-            "deepseek": "deepseek/deepseek-chat:free",  # FREE: DeepSeek free tier
-            "claude": "anthropic/claude-3.5-haiku",  # FREE: Claude Haiku (cheapest)
-            "owl-alpha": "openrouter/owl-alpha",  # FREE: OWL Alpha model routing
+            # ===== SAKHA-5.0 UNIFIED (Intelligent Router) =====
+            "sakha-5.0": "openrouter/auto",
+            
+            # ===== NVIDIA NEMOTRON SERIES (Primary Text Generation) =====
+            "nemotron-3-ultra": "openrouter/auto",
+            "nemotron-3-ultra-550b": "openrouter/auto",
+            "nemotron-3-super": "openrouter/auto",
+            "nemotron-3-super-120b": "openrouter/auto",
+            "nemotron-3-nano": "openrouter/auto",
+            "nemotron-3-nano-omni": "openrouter/auto",
+            "nemotron-3-nano-30b": "openrouter/auto",
+            
+            # ===== QWEN SERIES (Code Generation) =====
+            "qwen-qwen3-coder": "openrouter/auto",
+            "qwen3-coder": "openrouter/auto",
+            "qwen-qwen3-plus": "openrouter/auto",
+            "qwen3-plus": "openrouter/auto",
+            
+            # ===== POOLSIDE LAGUNA SERIES (Fast & Lightweight) =====
+            "laguna-m": "openrouter/auto",
+            "laguna-m-medium": "openrouter/auto",
+            "laguna-xs": "openrouter/auto",
+            "laguna-xs-extra-small": "openrouter/auto",
+            
+            # ===== MULTIMODAL MODELS =====
+            # Video Processing
+            "video-input-1": "openrouter/auto",
+            "video-input-2": "openrouter/auto",
+            "video-llava": "openrouter/auto",
+            
+            # Audio Processing
+            "audio-input": "openrouter/auto",
+            "audio-processing": "openrouter/auto",
+            
+            # Image Generation
+            "image-output-1": "openrouter/auto",
+            "image-output-2": "openrouter/auto",
+            "image-generation": "openrouter/auto",
+            
+            # Embeddings
+            "embed-output": "openrouter/auto",
+            "embeddings": "openrouter/auto",
+            
+            # ===== LEGACY/FALLBACK MODELS =====
+            "gpt-4o": "openrouter/auto",
+            "gpt-4": "openrouter/auto",
+            "gpt-3.5": "openrouter/auto",
+            "deepseek": "openrouter/auto",
+            "deepseek-chat": "openrouter/auto",
+            "claude": "openrouter/auto",
+            "claude-3.5-haiku": "openrouter/auto",
+            "owl-alpha": "openrouter/auto",
+            "openrouter-owl-alpha": "openrouter/auto",
         }
 
     def get_current_api_key(self) -> str:
