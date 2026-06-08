@@ -8,6 +8,7 @@ import { Login } from './components/Login'
 import LandingPage from './pages/LandingPage'
 import ChatView from './components/ChatView'
 import ImageGenerator from './pages/ImageGenerator'
+import Settings from './components/Settings'
 import { useAppStore } from './stores/app'
 
 function AppRoutes({ session, onLoginSuccess, onLogout }: {
@@ -38,6 +39,7 @@ function AppRoutes({ session, onLoginSuccess, onLogout }: {
         <Route index element={<Navigate to="chat" replace />} />
         <Route path="chat" element={<ChatView />} />
         <Route path="images" element={<ImageGenerator />} />
+        <Route path="settings" element={<Settings />} />
       </Route>
       <Route path="*" element={<Navigate to={session ? '/app/chat' : '/login'} replace />} />
     </Routes>

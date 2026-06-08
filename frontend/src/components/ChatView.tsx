@@ -33,7 +33,21 @@ export default function ChatView() {
     addMessage(currentChat.id, userMessage)
 
     try {
-      const response = await chatAPI.sendMessage(messageText, model, deepThinking)
+      // Convert chat history to conversation format for API
+      const conversationHistory = currentChat.messages
+        .slice(-10) // Limit to last 10 messages for context
+        .map(msg => ({
+          role: msg.role,
+          content: msg.content,
+        }))
+
+      const response = await chatAPI.sendMessage(
+        messageText,
+        model,
+        deepThinking,
+        conversationHistory
+      )
+
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',

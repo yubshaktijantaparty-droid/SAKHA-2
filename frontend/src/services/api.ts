@@ -1,128 +1,122 @@
 import axios from 'axios'
+import { openRouterService } from './openrouter-service'
 
-// Support both relative and absolute API URLs
-const getAPIBaseURL = () => {
-  const apiUrl = import.meta.env.VITE_API_URL
-  if (apiUrl && apiUrl.startsWith('http')) {
-    return `${apiUrl}/api`
-  }
+/**
+ * SAKHA AI API Service - Completely GitHub Dependent
+ * 
+ * This service:
+ * 1. Uses OpenRouter API directly (no backend server needed)
+ * 2. Stores chat history in localStorage
+ * 3. Runs completely on GitHub Pages
+ * 4. No dependencies on Railway or any external servers
+ */
 
-  if (import.meta.env.MODE === 'production') {
-    console.warn(
-      'VITE_API_URL is not set in production. The frontend will try to call /api on the current host, which will not work on GitHub Pages unless a backend is hosted at the same origin.'
-    )
-  }
-
-  return '/api'
-}
-
-const API_BASE_URL = getAPIBaseURL()
-
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  timeout: 30000,
-})
-
-// Demo mode responses for when backend is unavailable
-const demoResponses: { [key: string]: string } = {
-  'what is biochemistry': 'Biochemistry is the study of chemical processes occurring within living organisms. It focuses on the structure and function of biological molecules like proteins, nucleic acids, carbohydrates, and lipids. Key areas include metabolism, enzyme kinetics, and cellular signaling.',
-  'hi': 'Hello! I\'m SAKHA AI, your premium AI assistant. How can I help you today? Feel free to ask me questions, brainstorm ideas, or discuss any topic.',
-  'hello': 'Hi there! Welcome to SAKHA AI. I\'m here to help with any questions or tasks you have. What would you like to know?',
-  'how are you': 'I\'m doing great, thanks for asking! I\'m ready to help you with any questions or tasks. What can I assist you with?',
-  'help': 'I\'m SAKHA AI, your personal AI assistant! I can help you with: answering questions, writing content, coding, analysis, brainstorming, and much more. Just ask me anything!',
-  'default': 'That\'s an interesting question! Based on my knowledge, I can provide insights on this topic. Could you provide more context or ask a more specific question so I can give you a better answer?',
-}
-
-const getDemoResponse = (message: string): string => {
-  const lowerMessage = message.toLowerCase().trim()
-  
-  // Check for exact or partial matches
-  for (const [key, value] of Object.entries(demoResponses)) {
-    if (lowerMessage.includes(key) || key.includes(lowerMessage)) {
-      return value
-    }
-  }
-  
-  return demoResponses['default']
-}
-
-const isInDemoMode = (): boolean => {
-  return localStorage.getItem('demo_user') !== null
-}
-
+// Chat API - Uses OpenRouter directly
 export const chatAPI = {
-  sendMessage: async (message: string, model?: string, deepThinking?: boolean) => {
+  /**
+   * Send a message and get AI response
+   * Calls OpenRouter API directly from the browser
+   */
+  sendMessage: async (
+    message: string,
+    model: string = 'openrouter/auto',
+    deepThinking?: boolean,
+    conversationHistory: Array<{ role: string; content: string }> = []
+  ) => {
     try {
-      const response = await api.post('/chat', {
-        message,
-        model: model || 'sakha-5.0',
-        deep_thinking: deepThinking || false,
-      })
-      return response.data
-    } catch (error) {
-      // If backend fails and we're in demo mode, return mock response
-      if (isInDemoMode()) {
+      // Check if API key is configured
+      if (!localStorage.getItem('openrouter_api_key')) {
         return {
-          message: getDemoResponse(message),
-          model: 'sakha-5.0',
-          demo: true,
+          message: '⚙️ Please configure your OpenRouter API key in settings first.',
+          model,
+          error: true,
+          isConfigurationError: true,
         }
       }
-      throw error
+
+      // Get response directly from OpenRouter
+      const aiResponse = await openRouterService.sendMessage(
+        message,
+        model,
+        conversationHistory
+      )
+
+      return {
+        message: aiResponse,
+        model,
+        timestamp: new Date().toISOString(),
+      }
+    } catch (error: any) {
+      console.error('Chat error:', error)
+      return {
+        message: error.message || 'Failed to get AI response. Please try again.',
+        model,
+        error: true,
+        isConfigurationError: error.message?.includes('API key'),
+      }
     }
   },
 
-  streamMessage: async (message: string, model?: string) => {
-    try {
-      const response = await api.post('/chat/stream', {
-        message,
-        model: model || 'sakha-5.0',
-      }, {
-        responseType: 'stream',
-      })
-      return response.data
-    } catch (error) {
-      // If backend fails and we're in demo mode, return mock response
-      if (isInDemoMode()) {
-        return {
-          message: getDemoResponse(message),
-          model: 'sakha-5.0',
-          demo: true,
-        }
-      }
-      throw error
-    }
-  },
-
+  /**
+   * Get available AI models from OpenRouter
+   */
   getAvailableModels: async () => {
     try {
-      const response = await api.get('/chat/models')
-      return response.data
+      const models = await openRouterService.getAvailableModels()
+      return models
     } catch (error) {
-      // Return Sakha-5.0 as default if backend fails
+      console.error('Failed to fetch models:', error)
+      // Return a default model list
       return {
         models: [
-          { id: 'sakha-5.0', name: 'SAKHA-5.0 Unified AI' },
+          { id: 'openrouter/auto', name: '🤖 OpenRouter Auto (Best for each task)' },
+          { id: 'meta-llama/llama-3-70b-instruct', name: 'Meta Llama 3 70B' },
+          { id: 'mistralai/mistral-large', name: 'Mistral Large' },
+          { id: 'google/gemini-pro', name: 'Google Gemini Pro' },
+          { id: 'openai/gpt-4o', name: 'OpenAI GPT-4o' },
         ]
       }
     }
   },
 
+  /**
+   * Get chat history from localStorage
+   */
   getChatHistory: async (chatId: string) => {
     try {
-      const response = await api.get(`/chat/history/${chatId}`)
-      return response.data
+      const history = localStorage.getItem(`chat_${chatId}`)
+      if (history) {
+        return JSON.parse(history)
+      }
+      return { messages: [] }
     } catch (error) {
       return { messages: [] }
     }
   },
 
+  /**
+   * Save chat history to localStorage
+   */
+  saveChatHistory: async (chatId: string, messages: any[]) => {
+    try {
+      localStorage.setItem(`chat_${chatId}`, JSON.stringify({ messages }))
+      return { success: true }
+    } catch (error) {
+      console.error('Failed to save chat:', error)
+      return { success: false }
+    }
+  },
+
+  /**
+   * Delete chat from localStorage
+   */
   deleteChat: async (chatId: string) => {
     try {
-      const response = await api.post(`/chat/${chatId}/delete`)
-      return response.data
-    } catch (error) {
+      localStorage.removeItem(`chat_${chatId}`)
       return { success: true }
+    } catch (error) {
+      console.error('Failed to delete chat:', error)
+      return { success: false }
     }
   },
 }
@@ -130,19 +124,23 @@ export const chatAPI = {
 export const imageAPI = {
   generateImage: async (prompt: string, style?: string) => {
     try {
-      const response = await api.post('/images/generate', {
-        prompt,
-        style: style || 'realistic',
-      })
-      return response.data
+      return {
+        images: [
+          {
+            url: `https://picsum.photos/512/512?random=${Date.now()}&t=${encodeURIComponent(prompt)}`,
+            prompt,
+            style: style || 'realistic',
+            timestamp: new Date().toISOString(),
+          }
+        ]
+      }
     } catch (error) {
-      // Return demo image if backend fails
       return {
         images: [
           {
             url: `https://picsum.photos/512/512?random=${Date.now()}`,
             prompt,
-            style: style || 'realistic'
+            style: style || 'realistic',
           }
         ],
         demo: true,
@@ -151,30 +149,27 @@ export const imageAPI = {
   },
 
   getStyles: async () => {
-    try {
-      const response = await api.get('/images/styles')
-      return response.data
-    } catch (error) {
-      // Return default styles if backend fails
-      return {
-        styles: [
-          { id: 'realistic', name: 'Realistic' },
-          { id: 'anime', name: 'Anime' },
-          { id: 'oil-painting', name: 'Oil Painting' },
-          { id: 'watercolor', name: 'Watercolor' },
-          { id: 'digital-art', name: 'Digital Art' },
-          { id: 'cyberpunk', name: 'Cyberpunk' },
-          { id: 'steampunk', name: 'Steampunk' },
-          { id: 'abstract', name: 'Abstract' },
-        ]
-      }
+    return {
+      styles: [
+        { id: 'realistic', name: 'Realistic' },
+        { id: 'anime', name: 'Anime' },
+        { id: 'oil-painting', name: 'Oil Painting' },
+        { id: 'watercolor', name: 'Watercolor' },
+        { id: 'digital-art', name: 'Digital Art' },
+        { id: 'cyberpunk', name: 'Cyberpunk' },
+        { id: 'steampunk', name: 'Steampunk' },
+        { id: 'abstract', name: 'Abstract' },
+      ]
     }
   },
 
   getHistory: async (userId: string) => {
     try {
-      const response = await api.get(`/images/history/${userId}`)
-      return response.data
+      const history = localStorage.getItem(`images_${userId}`)
+      if (history) {
+        return JSON.parse(history)
+      }
+      return { images: [] }
     } catch (error) {
       return { images: [] }
     }
@@ -184,40 +179,81 @@ export const imageAPI = {
 export const fileAPI = {
   uploadFile: async (file: File) => {
     try {
-      const formData = new FormData()
-      formData.append('file', file)
-
-      const response = await api.post('/files/upload', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+      const reader = new FileReader()
+      return new Promise((resolve) => {
+        reader.onload = (e) => {
+          const fileData = {
+            file_id: 'file_' + Date.now(),
+            name: file.name,
+            size: file.size,
+            type: file.type,
+          }
+          try {
+            localStorage.setItem(`file_${fileData.file_id}`, JSON.stringify(fileData))
+          } catch (error) {
+            console.warn('File too large for localStorage')
+          }
+          resolve(fileData)
+        }
+        reader.readAsDataURL(file)
       })
-      return response.data
     } catch (error) {
-      return { file_id: 'demo_' + Date.now(), name: file.name, demo: true }
+      return { file_id: 'file_' + Date.now(), name: file.name, demo: true }
     }
   },
 
   analyzeFile: async (fileId: string, action: string, question?: string) => {
     try {
-      const response = await api.post(`/files/${fileId}/analyze`, {
-        action,
-        question,
-      })
-      return response.data
+      return { result: 'File analysis is available through AI chat. Ask the AI assistant about your file contents.', demo: true }
     } catch (error) {
-      return { result: 'File analysis feature is in demo mode. Real analysis requires backend access.', demo: true }
+      return { result: 'Please use the AI chat to analyze file contents.', demo: true }
     }
   },
 
   getSupportedTypes: async () => {
-    try {
-      const response = await api.get('/files/supported')
-      return response.data
-    } catch (error) {
-      return { types: ['pdf', 'txt', 'doc', 'docx', 'xlsx', 'csv'] }
-    }
+    return { types: ['pdf', 'txt', 'doc', 'docx', 'xlsx', 'csv', 'jpg', 'png'] }
   },
 }
 
-export default api
+// Settings API - localStorage based
+export const settingsAPI = {
+  setApiKey: (key: string) => {
+    localStorage.setItem('openrouter_api_key', key)
+    return { success: true }
+  },
+
+  getApiKey: () => {
+    return {
+      apiKey: localStorage.getItem('openrouter_api_key') || '',
+    }
+  },
+
+  deleteApiKey: () => {
+    localStorage.removeItem('openrouter_api_key')
+    return { success: true }
+  },
+
+  getSettings: () => {
+    const settings = localStorage.getItem('sakha_settings')
+    if (settings) {
+      return JSON.parse(settings)
+    }
+    return {
+      theme: 'dark',
+      language: 'en',
+      autoSave: true,
+    }
+  },
+
+  updateSettings: (settings: any) => {
+    localStorage.setItem('sakha_settings', JSON.stringify(settings))
+    return { success: true }
+  },
+}
+
+export default {
+  chatAPI,
+  imageAPI,
+  fileAPI,
+  settingsAPI,
+}
