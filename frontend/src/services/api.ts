@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { openRouterService } from './openrouter-service'
+import { openRouterService, hasApiKey } from './openrouter-service'
 
 /**
  * SAKHA AI API Service - Completely GitHub Dependent
@@ -9,6 +9,7 @@ import { openRouterService } from './openrouter-service'
  * 2. Stores chat history in localStorage
  * 3. Runs completely on GitHub Pages
  * 4. No dependencies on Railway or any external servers
+ * 5. API Keys loaded from environment variables (NO USER CONFIG NEEDED)
  */
 
 // Chat API - Uses OpenRouter directly
@@ -16,6 +17,7 @@ export const chatAPI = {
   /**
    * Send a message and get AI response
    * Calls OpenRouter API directly from the browser
+   * No configuration needed - uses API keys from .env
    */
   sendMessage: async (
     message: string,
@@ -24,10 +26,10 @@ export const chatAPI = {
     conversationHistory: Array<{ role: string; content: string }> = []
   ) => {
     try {
-      // Check if API key is configured
-      if (!localStorage.getItem('openrouter_api_key')) {
+      // Check if API keys are configured from environment variables
+      if (!hasApiKey()) {
         return {
-          message: '⚙️ Please configure your OpenRouter API key in settings first.',
+          message: '❌ No OpenRouter API key found. Add VITE_OPENROUTER_API_KEY to frontend/.env file and rebuild.',
           model,
           error: true,
           isConfigurationError: true,

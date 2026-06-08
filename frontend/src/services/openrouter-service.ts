@@ -1,26 +1,54 @@
 /**
  * OpenRouter Service - Direct API calls to OpenRouter
  * No backend required - completely client-side
- * Stores API keys in localStorage (user can manage themselves)
+ * 
+ * ✅ API keys are loaded from environment variables (.env file)
+ * ✅ NO user configuration needed!
+ * ✅ NO Settings page required!
+ * ✅ Automatic key rotation for load balancing
  */
 
 import axios from 'axios'
 
-const OPENROUTER_BASE_URL = 'https://openrouter.ai/api/v1'
+const OPENROUTER_BASE_URL = import.meta.env.VITE_OPENROUTER_BASE_URL || 'https://openrouter.ai/api/v1'
 
-// Get API key from localStorage
+// Get all available API keys from environment variables ONLY
+const getAvailableApiKeys = (): string[] => {
+  const keys: string[] = []
+  
+  // Primary API key from environment
+  const envKey = import.meta.env.VITE_OPENROUTER_API_KEY
+  if (envKey && envKey.includes('sk-or-v1')) {
+    keys.push(envKey)
+  }
+  
+  // Additional API keys from environment (comma-separated)
+  const envKeys = import.meta.env.VITE_OPENROUTER_API_KEYS
+  if (envKeys && typeof envKeys === 'string' && envKeys.length > 0) {
+    const additionalKeys = envKeys.split(',').map((k: string) => k.trim()).filter((k: string) => k.includes('sk-or-v1'))
+    keys.push(...additionalKeys)
+  }
+  
+  return [...new Set(keys)] // Remove duplicates
+}
+
+// Get next API key with automatic rotation for load balancing
+let currentKeyIndex = 0
 const getApiKey = (): string | null => {
-  return localStorage.getItem('openrouter_api_key')
+  const keys = getAvailableApiKeys()
+  if (keys.length === 0) {
+    return null
+  }
+  
+  // Rotate through keys automatically
+  const key = keys[currentKeyIndex % keys.length]
+  currentKeyIndex = (currentKeyIndex + 1) % keys.length
+  return key
 }
 
-// Store API key
-export const setApiKey = (key: string) => {
-  localStorage.setItem('openrouter_api_key', key)
-}
-
-// Check if API key is set
+// Check if API keys are configured
 export const hasApiKey = (): boolean => {
-  return !!getApiKey()
+  return getAvailableApiKeys().length > 0
 }
 
 // OpenRouter models with nice names

@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Plus, Trash2, Search, Image, MessageSquare, Settings } from 'lucide-react'
+import { Plus, Trash2, Search, Image, MessageSquare } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 import { useChatStore } from '../stores/chat'
 
@@ -48,19 +48,6 @@ export default function Sidebar() {
           >
             <Image size={16} />
             Image Studio
-          </NavLink>
-          <NavLink
-            to="/app/settings"
-            className={({ isActive }) =>
-              `flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                isActive
-                  ? 'bg-primary text-white'
-                  : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
-              }`
-            }
-          >
-            <Settings size={16} />
-            Settings
           </NavLink>
         </nav>
       </div>
