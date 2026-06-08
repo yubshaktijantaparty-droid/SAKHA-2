@@ -6,6 +6,13 @@ const getAPIBaseURL = () => {
   if (apiUrl && apiUrl.startsWith('http')) {
     return `${apiUrl}/api`
   }
+
+  if (import.meta.env.MODE === 'production') {
+    console.warn(
+      'VITE_API_URL is not set in production. The frontend will try to call /api on the current host, which will not work on GitHub Pages unless a backend is hosted at the same origin.'
+    )
+  }
+
   return '/api'
 }
 

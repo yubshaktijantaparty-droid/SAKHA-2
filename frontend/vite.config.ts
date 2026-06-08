@@ -1,9 +1,9 @@
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 
-// Get repo name from environment or use default
-const repoName = process.env.VITE_REPO_NAME || ''
-const basePath = process.env.NODE_ENV === 'production' && repoName ? `/${repoName}/` : '/'
+// Get repo name from environment or use default GitHub Pages repository name
+const repoName = process.env.VITE_REPO_NAME || 'SAKHA-2'
+const basePath = process.env.NODE_ENV === 'production' ? `/${repoName}/` : '/'
 
 export default defineConfig({
   base: basePath,
