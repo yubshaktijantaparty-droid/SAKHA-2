@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom'
+import { HashRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import { supabase, hasSupabase } from './lib/supabase'
 import { Session } from '@supabase/supabase-js'
@@ -133,14 +133,12 @@ export default function App() {
     setSession(null)
   }
 
-  const basename = import.meta.env.BASE_URL || '/'
-
   return (
-    <BrowserRouter basename={basename}>
+    <HashRouter>
       <div className="min-h-screen bg-white dark:bg-darker-bg text-slate-900 dark:text-slate-100">
         <Toaster position="bottom-right" />
         <AppRoutes session={session} onLoginSuccess={handleDemoLoginSuccess} onLogout={handleDemoLogout} />
       </div>
-    </BrowserRouter>
+    </HashRouter>
   )
 }
