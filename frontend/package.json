@@ -7,6 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "build:prod": "cross-env VITE_REPO_NAME=SAKHA-2 vite build",
+    "build:railway": "cross-env VITE_REPO_NAME=SAKHA-2 VITE_API_URL=${VITE_API_URL:-https://sakha-ai-prod.railway.app} vite build",
+    "build:github": "npm run build:prod && cp dist/* ../docs/ -r",
     "preview": "vite preview",
     "lint": "eslint . --ext .ts,.tsx",
     "deploy": "npm run build:prod && gh-pages -d dist",

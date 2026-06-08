@@ -120,8 +120,13 @@ class Settings:
         "http://localhost:5173",
         "http://localhost:5174",
         "http://localhost:5175",
-        os.getenv("FRONTEND_URL", "").rstrip("/"),
+        "https://yubshaktijantaparty-droid.github.io",
     ]
+    
+    # Override CORS origins from environment variable (comma-separated)
+    _env_cors = os.getenv("CORS_ORIGINS", "")
+    if _env_cors:
+        CORS_ORIGINS = [origin.strip() for origin in _env_cors.split(",") if origin.strip()]
 
     # Rate Limiting
     RATE_LIMIT_ENABLED: bool = True
