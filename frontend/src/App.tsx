@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import { supabase, hasSupabase } from './lib/supabase'
 import { Session } from '@supabase/supabase-js'
@@ -9,6 +9,40 @@ import LandingPage from './pages/LandingPage'
 import ChatView from './components/ChatView'
 import ImageGenerator from './pages/ImageGenerator'
 import { useAppStore } from './stores/app'
+
+function AppRoutes({ session, onLoginSuccess, onLogout }: {
+  session: Session | any
+  onLoginSuccess: () => void
+  onLogout: () => void
+}) {
+  const location = useLocation()
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search)
+    const redirect = params.get('redirect')
+
+    if (redirect && location.pathname === '/') {
+      navigate(redirect, { replace: true })
+    }
+  }, [location, navigate])
+
+  return (
+    <Routes>
+      <Route path="/" element={session ? <Navigate to="/app/chat" replace /> : <LandingPage />} />
+      <Route path="/login" element={session ? <Navigate to="/app/chat" replace /> : <Login onLoginSuccess={onLoginSuccess} />} />
+      <Route
+        path="/app"
+        element={session ? <Layout session={session} onLogout={onLogout} /> : <Navigate to="/login" replace />}
+      >
+        <Route index element={<Navigate to="chat" replace />} />
+        <Route path="chat" element={<ChatView />} />
+        <Route path="images" element={<ImageGenerator />} />
+      </Route>
+      <Route path="*" element={<Navigate to={session ? '/app/chat' : '/login'} replace />} />
+    </Routes>
+  )
+}
 
 export default function App() {
   const [session, setSession] = useState<Session | any>(null)
@@ -105,19 +139,7 @@ export default function App() {
     <BrowserRouter basename={basename}>
       <div className="min-h-screen bg-white dark:bg-darker-bg text-slate-900 dark:text-slate-100">
         <Toaster position="bottom-right" />
-        <Routes>
-          <Route path="/" element={session ? <Navigate to="/app/chat" replace /> : <LandingPage />} />
-          <Route path="/login" element={session ? <Navigate to="/app/chat" replace /> : <Login onLoginSuccess={handleDemoLoginSuccess} />} />
-          <Route
-            path="/app"
-            element={session ? <Layout session={session} onLogout={handleDemoLogout} /> : <Navigate to="/login" replace />}
-          >
-            <Route index element={<Navigate to="chat" replace />} />
-            <Route path="chat" element={<ChatView />} />
-            <Route path="images" element={<ImageGenerator />} />
-          </Route>
-          <Route path="*" element={<Navigate to={session ? '/app/chat' : '/login'} replace />} />
-        </Routes>
+        <AppRoutes session={session} onLoginSuccess={handleDemoLoginSuccess} onLogout={handleDemoLogout} />
       </div>
     </BrowserRouter>
   )

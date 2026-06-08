@@ -2,15 +2,27 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta http-equiv="refresh" content="0;url=./" />
     <title>Page Not Found</title>
+    <meta http-equiv="refresh" content="0;url=/SAKHA-2/" />
     <script>
-      const redirectUrl = window.location.href.replace(/\/[^/]*$/, '/');
-      window.location.replace(redirectUrl);
+      const basePath = '/SAKHA-2/'
+      const currentPath = window.location.pathname
+      let relativePath = currentPath
+
+      if (currentPath.startsWith(basePath)) {
+        relativePath = currentPath.slice(basePath.length)
+      }
+
+      if (!relativePath || relativePath === '/') {
+        window.location.replace(basePath)
+      } else {
+        const target = basePath + '?redirect=' + encodeURIComponent(relativePath + window.location.search + window.location.hash)
+        window.location.replace(target)
+      }
     </script>
   </head>
   <body>
     <h1>Redirecting...</h1>
-    <p>If you are not redirected automatically, <a href="./">click here</a>.</p>
+    <p>If you are not redirected automatically, <a href="/SAKHA-2/">click here</a>.</p>
   </body>
 </html>
